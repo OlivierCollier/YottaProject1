@@ -1,17 +1,16 @@
 [tool.poetry]
 name = "productsubscription-oc-jk"
 version = "0.1.0"
-description = "Yotta Project 1"
-authors = ["Jérémie Koster and Olivier Collier"]
+description = ""
+authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-pandas = "^1.2.2"
-matplotlib = "^3.3.4"
-seaborn = "^0.11.1"
-sklearn = "^0.0"
-scipy = "^1.6.0"
-statsmodels = "^0.12.2"
+python = "^3.8"
+pandas-profiling = "^2.10.1"
+ipython = "^7.20.0"
+scipy = "^1.6.1"
+ipdb = "^0.13.4"
+scikit-learn = "^0.24.1"
 
 [tool.poetry.dev-dependencies]
 
