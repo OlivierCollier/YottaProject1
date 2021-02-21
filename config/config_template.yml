@@ -1,0 +1,15 @@
+subscription:
+  path: path/to/subscription/file
+  date_column_name: string
+  date_format: string
+  sep: string/for/csv
+
+economic_info:
+  path: path/to/economic/info/file
+  date_column_name: string
+  date_format: string
+  sep: string/for/csv
+
+out:
+  preprocessing: path/to/preprocessed_data.csv
+

@@ -1,0 +1,15 @@
+subscription:
+  path: '../../data/raw/data.csv'
+  date_column_name: 'DATE'
+  date_format: '%Y-%m-%d'
+  sep: ';'
+
+economic_info:
+  path: '../../data/raw/socio_eco.csv'
+  date_column_name: 'DATE'
+  date_format: '%Y-%m-%d'
+  sep: ';'
+
+out:
+  preprocessing: '../../data/interim/preprocessed_data.csv'
+
