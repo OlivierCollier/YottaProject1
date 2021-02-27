@@ -1,8 +1,10 @@
-
+import os
 import pandas as pd
 import datetime as dt
 from dataclasses import dataclass
-from config.config import read_yaml
+from src.config.config import read_yaml
+from src.config.base import *
+from src.config.column_names import *
 
 
 class Data:
@@ -67,32 +69,20 @@ class Join:
 
 if __name__ == '__main__':
 
-    # read config file
-    CONFIG = read_yaml('../config/config.yml')
-    DATA_PATH = CONFIG['subscription']['path']
-    DATA_DATE_COLUMN_NAME = CONFIG['subscription']['date_column_name']
-    DATA_DATE_FORMAT = CONFIG['subscription']['date_format']
-    DATA_SEP = CONFIG['subscription']['sep']
-    ECO_DATA_PATH = CONFIG['economic_info']['path']
-    ECO_DATA_DATE_COLUMN_NAME = CONFIG['economic_info']['date_column_name']
-    ECO_DATA_DATE_FORMAT = CONFIG['economic_info']['date_format']
-    ECO_DATA_SEP = CONFIG['economic_info']['sep']
-    PREPROCESSING_DATA_PATH = CONFIG['out']['preprocessing']
-
     # read and clean data
     data = DataFactory(DATA_PATH,
-                       DATA_DATE_COLUMN_NAME,
+                       LAST_CONTACT_DATE,
                        DATA_DATE_FORMAT,
                        DATA_SEP).clean_data
     external_month_info = DataFactory(ECO_DATA_PATH,
-                                      ECO_DATA_DATE_COLUMN_NAME,
+                                      END_MONTH,
                                       ECO_DATA_DATE_FORMAT,
                                       ECO_DATA_SEP).clean_data
 
     # gather data and save
     join = Join(data, external_month_info)
     preprocessed_data = join.left_join
-    join.save(PREPROCESSING_DATA_PATH)
+    join.save(PROCESSED_DATA_PATH)
 
 
 
