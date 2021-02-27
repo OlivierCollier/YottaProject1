@@ -17,7 +17,6 @@ CONFIG_DIR = os.path.join(REPO_DIR, 'src/config')
 
 # Config file
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.yml')
-
 config_data = read_yaml(CONFIG_FILE_PATH)
 DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['subscription']['name'])
 config_client_data = config_data.get('subscription')
@@ -25,8 +24,6 @@ DATA_DATE_FORMAT = config_data['subscription']['date_format']
 DATA_SEP = config_data['subscription']['sep']
 ECO_DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['economic_info']['name'])
 config_eco_data = config_data.get('economic_info')
-DATA_DATE_FORMAT = config_data['subscription']['date_format']
-DATA_SEP = config_data['subscription']['sep']
 ECO_DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['economic_info']['name'])
 ECO_DATA_DATE_FORMAT = config_data['economic_info']['date_format']
 ECO_DATA_SEP = config_data['economic_info']['sep']
