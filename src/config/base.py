@@ -26,6 +26,9 @@ DATA_DATE_FORMAT = config_data['subscription']['date_format']
 DATA_SEP = config_data['subscription']['sep']
 ECO_DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['economic_info']['name'])
 config_eco_data = config_data.get('economic_info')
+DATA_DATE_FORMAT = config_data['subscription']['date_format']
+DATA_SEP = config_data['subscription']['sep']
+ECO_DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['economic_info']['name'])
 ECO_DATA_DATE_FORMAT = config_data['economic_info']['date_format']
 ECO_DATA_SEP = config_data['economic_info']['sep']
 
@@ -68,3 +71,4 @@ ALL_CLIENT_DATA_TRANSLATION = {
     EDUCATION: EDUCATION_TRANSLATION,
     FAMILY_STATUS: FAMILY_STATUS_TRANSLATION
 }
+PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
