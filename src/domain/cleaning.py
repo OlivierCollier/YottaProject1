@@ -2,6 +2,7 @@
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.stats.mstats import winsorize
+import datetime as dt
 
 
 def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:
@@ -127,6 +128,9 @@ class OutlierTreatment(BaseEstimator, TransformerMixin):
 	fit(data)
 	transform(data)
 	"""
+	def _detect_start_of_quarter(self, column_name):
+		changes = self.data[column_name].diff().nonzero()
+
 
 	def __init__(self, column_names: list):
 		self.data = None
