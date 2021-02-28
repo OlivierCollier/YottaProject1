@@ -133,4 +133,3 @@ class OutlierTreatment(BaseEstimator, TransformerMixin):
 		"""Winsorizes outliers."""
 		for column_name in self.column_names:
 			self.data[column_name] = winsorize(self.data[column_name], limits=[0, .01])
-		return self
