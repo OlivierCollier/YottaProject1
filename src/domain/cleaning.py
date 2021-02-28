@@ -37,32 +37,44 @@ def correct_wrong_entries(data: pd.DataFrame, corrections: dict) -> pd.DataFrame
 	return corrected_data
 
 
-class MissingValueTreatment(BaseEstimator, TransformerMixin):
-	"""Data transformations to deal with missing values.
-
-	When JOB_TYPE is provided, other related variables can be filled
-	by the most common value among observations with same JOB_TYPE value.
-	In other cases, the observation is removed.
-
-	Attributes
-	----------
-	data: pd.DataFrame
-	categorical_variables: list
-		List of categorical variables having missing values.
-	continuous_variables: list
-		List of continuous variables having missing values.
-
-	Methods
-	-------
-	fit(data)
-	transform(data)
+	"""
+	Assumes that data has column "date" in format datetime.
 
 	"""
 
-	def __init__(self, categorical_variables: list, continuous_variables: list):
-		self.data = None
-		self.categorical_variables = categorical_variables
-		self.continuous_variables = continuous_variables
+	def __init__(self, data, quarterly_features):
+		self.data = data
+		self.quarterly_features = quarterly_features
+
+	@property
+	def monthly_features(self):
+		column_names = self.data.columns
+		quarterly_features = self.data.quarterly_data
+		monthly_features = column_names.difference(quarterly_features).to_list()
+		return monthly_features
+
+	def clean(self):
+		self._check_if_consecutive_months()
+		self._impute_monthly_data()
+		for column_name in self.quarterly_features:
+			self._check_if_quarterly_data(column_name)
+			self.data[column_name] = self._impute_quarterly_data(column_name)
+
+	def _check_if_consecutive_months(self):
+		month_number = self.data['date'].apply(lambda x: 12 * x.year + x.month).to_numpy()
+		differences = np.diff(month_number)
+		test = all([element == 1 for element in differences])
+		if not test:
+			raise ValueError('Months are not consecutive.')
+
+	def _impute_monthly_data(self):
+		self.data[self.monthly_features].interpolate(limit_direction='both', inplace=True)
+
+	def _check_if_quarterly_data(self, column_name):
+
+	def _impute_quarterly_data(self, column_name):
+
+
 
 	def fit(self, data: pd.DataFrame):
 		self.data = data
