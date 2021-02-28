@@ -1,6 +1,7 @@
 
 import numpy as np
 import pandas as pd
+import datetime as dt
 
 
 class ClientDataCleaner:
@@ -55,7 +56,9 @@ class EcoDataCleaner:
 
 
 
-	def _detect_first_month_of_quarter(self):
+	def _detect_start_of_quarter(self, column_name):
+		changes = self.data[column_name].diff().nonzero()
+
 
 
 
