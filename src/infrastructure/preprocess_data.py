@@ -25,27 +25,25 @@ class DataBuilder:
             raise ValueError(f'Build mode should be one of {BUILD_MODES}')
         self.build_mode = build_mode
         self.cols_to_drop = cols_to_drop
+        self.data = self.read()
 
     def read(self):
         return NotImplementedError
 
-    def _rename_date_column(self, data: pd.DataFrame) -> pd.DataFrame:
-        renamed_data = data.rename({self.date_column_name: 'DATE'})
-        return renamed_data
+    def _add_merger_field(self, data: pd.DataFrame) -> pd.DataFrame:
+        data[MERGER_FIELD] = data[self.date_column_name].dt.strftime('%Y-%m')
+        # datetime = data['DATE'].apply(lambda x: dt.datetime.strptime(x, self.date_format))
+        # year_month = datetime.apply(lambda x: f'{x.month}-{x.year}')
+        # enriched_data = data.assign(YEAR_MONTH=year_month)
+        return data
 
-    def _add_year_and_month_column(self, data: pd.DataFrame) -> pd.DataFrame:
-        datetime = data['DATE'].apply(lambda x: dt.datetime.strptime(x, self.date_format))
-        year_month = datetime.apply(lambda x: f'{x.month}-{x.year}')
-        enriched_data = data.assign(YEAR_MONTH=year_month)
-        return enriched_data
-
-    def _cast_types(self, data: pd.DataFrame):
+    def _cast_types(self, data: pd.DataFrame) -> pd.DataFrame:
         """ Cast columns to adequate types"""
         mapping_cols_types = self.config.get('cast_types')
         casted_data = data.astype(mapping_cols_types)
         return casted_data
 
-    def _drop_columns(self, data: pd.DataFrame):
+    def _drop_columns(self, data: pd.DataFrame) -> pd.DataFrame:
         """ Drop columns specified in column_names.py """
         if self.cols_to_drop == 'eda':
             data_cleaned = data.drop(columns=self.cols_to_drop)
@@ -56,12 +54,12 @@ class DataBuilder:
     @property
     def preprocess_data(self) -> pd.DataFrame:
         """ Run preprocess tasks """
+        ipdb.set_trace()
         raw_data = self.read()
         types_casted_data = self._cast_types(raw_data)
         dropped_cols_data = self._drop_columns(types_casted_data)
-        #renamed_data = self._rename_date_column(raw_data)
-        #cleaned_data = self._add_year_and_month_column(renamed_data)
-        return dropped_cols_data
+        processed_data = self._add_merger_field(dropped_cols_data)
+        return processed_data
 
 
 class DataBuilderCSV(DataBuilder):
@@ -97,9 +95,9 @@ class Join:
 
     @property
     def left_join(self) -> pd.DataFrame:
-        join = self.data.merge(self.external_month_info, how='left')
-        join.drop(['YEAR_MONTH'], axis=1, inplace=True)
-        return join
+        joined_data = self.data.merge(self.external_month_info, how='left', on=MERGER_FIELD)
+        joined_data.drop([MERGER_FIELD], axis=1, inplace=True)
+        return joined_data
 
     def save(self, out_path: str):
         self.left_join.to_csv(out_path)
@@ -108,7 +106,7 @@ class Join:
 if __name__ == '__main__':
 
     # read and clean data
-    data = DataBuilderFactory(DATA_PATH,
+    client_data = DataBuilderFactory(DATA_PATH,
                        LAST_CONTACT_DATE,
                        DATA_DATE_FORMAT,
                        DATA_SEP,
@@ -124,7 +122,7 @@ if __name__ == '__main__':
                                       ECO_COLUMNS_TO_DROP).preprocess_data
 
     # gather data and save
-    join = Join(data, external_month_info)
+    join = Join(client_data, external_month_info)
     preprocessed_data = join.left_join
     join.save(PROCESSED_DATA_PATH)
 
