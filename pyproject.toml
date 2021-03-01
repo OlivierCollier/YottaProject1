@@ -12,6 +12,7 @@ scipy = "^1.6.1"
 ipdb = "^0.13.4"
 scikit-learn = "^0.24.1"
 PyYAML = "^5.4.1"
+imbalanced-learn = "^0.8.0"
 
 [tool.poetry.dev-dependencies]
 

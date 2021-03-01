@@ -182,6 +182,26 @@ scipy = "*"
 six = "*"
 
 [[package]]
+name = "imbalanced-learn"
+version = "0.8.0"
+description = "Toolbox for imbalanced dataset in machine learning."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+joblib = ">=0.11"
+numpy = ">=1.13.3"
+scikit-learn = ">=0.24"
+scipy = ">=0.19.1"
+
+[package.extras]
+dev = ["black", "flake8"]
+docs = ["sphinx", "sphinx-gallery", "pydata-sphinx-theme", "sphinxcontrib-bibtex", "numpydoc", "matplotlib", "pandas", "seaborn"]
+optional = ["keras", "tensorflow"]
+tests = ["pytest", "pytest-cov"]
+
+[[package]]
 name = "ipdb"
 version = "0.13.4"
 description = "IPython-enabled pdb"
@@ -1063,7 +1083,7 @@ notebook = ">=4.4.1"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "aef03fa5046f3342df80f7d8d751189603a0a6f93a21699c7ad9df5a6040011a"
+content-hash = "3b2789f0cf33dc00a21fe978d3587f34c052118850dc0ac7bfbe8d1a9f2deb2e"
 
 [metadata.files]
 appnope = [
@@ -1188,6 +1208,10 @@ imagehash = [
     {file = "ImageHash-4.2.0-py2.py3-none-any.whl", hash = "sha256:ce6c97695810f1a78da68f9e422cee8a5ed986b73398149bb015741495add656"},
     {file = "ImageHash-4.2.0-py3.8.egg", hash = "sha256:331c383a2fc35d622e49b7391e49596dcec35ad358221eae394a9db6c56e69a4"},
     {file = "ImageHash-4.2.0.tar.gz", hash = "sha256:a969a806cb704a1a88a459a2c53adf87c01b477604b4f25d565cf0f7a49ef14d"},
+]
+imbalanced-learn = [
+    {file = "imbalanced-learn-0.8.0.tar.gz", hash = "sha256:1c04d203575088af5814511b6238b38e7523370cc188770b7a25418d09cf3d29"},
+    {file = "imbalanced_learn-0.8.0-py3-none-any.whl", hash = "sha256:58f9baaf90bfe8931973b9637328bda327850c7fde3787ac19922e36bfe8c6a2"},
 ]
 ipdb = [
     {file = "ipdb-0.13.4.tar.gz", hash = "sha256:c85398b5fb82f82399fc38c44fe3532c0dde1754abee727d8f5cfcc74547b334"},
