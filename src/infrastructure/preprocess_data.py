@@ -45,10 +45,11 @@ class DataBuilder:
 
     def _drop_columns(self) -> None:
         """ 
-        Drop columns specified in column_names.py only in 'eda' build mode. 
-        In 'production' mode, we don't want to keep those columns
+        Drop columns specified in column_names.py only in 'production' build mode
+        because we cannot use them. 
+        In 'eda' mode, we want to keep them for the plots and explanations.
         """
-        if self.build_mode == 'eda':
+        if self.build_mode == 'production':
             self.data.drop(columns=self.cols_to_drop, inplace=True)
         return self
         
@@ -129,5 +130,5 @@ if __name__ == '__main__':
     join = Join(client_data, economic_data)
     join.left_join()
     join.save(PROCESSED_DATA_PATH)
-
+    ipdb.set_trace()
 

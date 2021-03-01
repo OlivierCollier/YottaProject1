@@ -1,6 +1,7 @@
 import os
 
 from src.config.config import read_yaml
+from src.config.column_names import *
 
 # Directories
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -30,3 +31,12 @@ ECO_DATA_SEP = config_data['economic_info']['sep']
 
 PROCESSED_DATA_NAME = 'processed_data.csv'
 PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
+
+
+CLIENT_COLUMNS_TO_DROP = [
+    LAST_CONTACT_DURATION,
+    COMMUNICATION_TYPE
+]
+ECO_COLUMNS_TO_DROP = [
+
+]
