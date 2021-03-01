@@ -33,10 +33,38 @@ PROCESSED_DATA_NAME = 'processed_data.csv'
 PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
 
 
+# Columns to drop from datasets in EDA mode
 CLIENT_COLUMNS_TO_DROP = [
     LAST_CONTACT_DURATION,
     COMMUNICATION_TYPE
 ]
 ECO_COLUMNS_TO_DROP = [
-
 ]
+
+
+# Translation between french and english for column values
+JOB_TYPE_TRANSLATION = {
+    'Technicien': 'Technician',
+    'Entrepreuneur': 'Entrepreneur',
+    'Col bleu': 'Blue-collar worker',
+    'Retraité': 'Retired',
+    'Indépendant': 'Freelance',
+    'Chomeur': 'Unemployed',
+    'Employé de ménage': 'House keeper',
+    'Etudiant': 'Student'
+}
+EDUCATION_TRANSLATION = {
+    'Tertiaire': 'Graduate studies',
+    'Secondaire': 'Secondary education',
+    'Primaire': 'Primary education'
+}
+FAMILY_STATUS_TRANSLATION = {
+    'Marié': 'Married',
+    'Célibataire': 'Single',
+    'Divorcé': 'Divorced'
+}
+ALL_CLIENT_DATA_TRANSLATION = {
+    JOB_TYPE: JOB_TYPE_TRANSLATION,
+    EDUCATION: EDUCATION_TRANSLATION,
+    FAMILY_STATUS: FAMILY_STATUS_TRANSLATION
+}

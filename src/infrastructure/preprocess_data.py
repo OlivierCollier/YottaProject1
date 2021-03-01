@@ -13,7 +13,7 @@ BUILD_MODES = ['production', 'eda']
 class DataBuilder:
 
     def __init__(self, path: str, date_column_name: str, date_format: str, sep: str,\
-        config: dict, build_mode: str, cols_to_drop : list = None):
+        config: dict, build_mode: str, cols_to_drop: list = None, text_translation: dict = None):
         self.path = path
         self.date_column_name = date_column_name
         self.date_format = date_format
@@ -23,6 +23,7 @@ class DataBuilder:
             raise ValueError(f'Build mode should be one of {BUILD_MODES}')
         self.build_mode = build_mode
         self.cols_to_drop = cols_to_drop
+        self.text_translation = text_translation
         self.data = self.read()
 
 
@@ -52,12 +53,20 @@ class DataBuilder:
         if self.build_mode == 'production':
             self.data.drop(columns=self.cols_to_drop, inplace=True)
         return self
-        
+
+
+    def _replace_translation(self) -> None:
+        """ Replace text translation from french into english """
+        if self.text_translation:
+            self.data.replace(self.text_translation, inplace=True)
+        return self
+
 
     def preprocess_data(self) -> pd.DataFrame:
         """ Run preprocess tasks """
         processed_data = self._cast_types() \
                              ._drop_columns() \
+                             ._replace_translation() \
                              ._add_merger_field()
 
         return processed_data
@@ -82,10 +91,10 @@ class DataBuilderFactory:
     """
 
     def __new__(cls, path: str, date_column_name: str, date_format: str, sep: str, \
-        config: dict, build_mode: str, cols_to_drop: list):
+        config: dict, build_mode: str, cols_to_drop: list, text_translation: dict = None):
         if path.endswith('.csv'):
             return DataBuilderCSV(path, date_column_name, date_format, sep, \
-                config, build_mode, cols_to_drop)
+                config, build_mode, cols_to_drop, text_translation)
         else:
             raise ValueError('Unsupported data format.')
     
@@ -114,7 +123,9 @@ if __name__ == '__main__':
                        DATA_SEP,
                        config_client_data,
                        'production',
-                       CLIENT_COLUMNS_TO_DROP)
+                       CLIENT_COLUMNS_TO_DROP,
+                       ALL_CLIENT_DATA_TRANSLATION
+                       )
     client_data = client_builder.preprocess_data().data
     
     economic_builder = DataBuilderFactory(ECO_DATA_PATH,
