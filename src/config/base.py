@@ -1,6 +1,7 @@
 import os
 
 from src.config.config import read_yaml
+from src.config.column_names import *
 
 # Directories
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -20,11 +21,50 @@ CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.yml')
 
 config_data = read_yaml(CONFIG_FILE_PATH)
 DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['subscription']['name'])
+config_client_data = config_data.get('subscription')
 DATA_DATE_FORMAT = config_data['subscription']['date_format']
 DATA_SEP = config_data['subscription']['sep']
 ECO_DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['economic_info']['name'])
+config_eco_data = config_data.get('economic_info')
 ECO_DATA_DATE_FORMAT = config_data['economic_info']['date_format']
 ECO_DATA_SEP = config_data['economic_info']['sep']
 
 PROCESSED_DATA_NAME = 'processed_data.csv'
 PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
+
+
+# Columns to drop from datasets in EDA mode
+CLIENT_COLUMNS_TO_DROP = [
+    LAST_CONTACT_DURATION,
+    COMMUNICATION_TYPE
+]
+ECO_COLUMNS_TO_DROP = [
+]
+
+
+# Translation between french and english for column values
+JOB_TYPE_TRANSLATION = {
+    'Technicien': 'Technician',
+    'Entrepreuneur': 'Entrepreneur',
+    'Col bleu': 'Blue-collar worker',
+    'Retraité': 'Retired',
+    'Indépendant': 'Freelance',
+    'Chomeur': 'Unemployed',
+    'Employé de ménage': 'House keeper',
+    'Etudiant': 'Student'
+}
+EDUCATION_TRANSLATION = {
+    'Tertiaire': 'Graduate studies',
+    'Secondaire': 'Secondary education',
+    'Primaire': 'Primary education'
+}
+FAMILY_STATUS_TRANSLATION = {
+    'Marié': 'Married',
+    'Célibataire': 'Single',
+    'Divorcé': 'Divorced'
+}
+ALL_CLIENT_DATA_TRANSLATION = {
+    JOB_TYPE: JOB_TYPE_TRANSLATION,
+    EDUCATION: EDUCATION_TRANSLATION,
+    FAMILY_STATUS: FAMILY_STATUS_TRANSLATION
+}
