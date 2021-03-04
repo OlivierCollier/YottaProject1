@@ -12,12 +12,9 @@ BUILD_MODES = ['production', 'eda']
 
 class DataBuilder:
 
-    def __init__(self, path: str, date_column_name: str, date_format: str, sep: str,\
-        config: dict, build_mode: str, cols_to_drop: list = None, text_translation: dict = None):
+    def __init__(self, path: str, config: dict, build_mode: str, \
+                 cols_to_drop: list = None, text_translation: dict = None):
         self.path = path
-        self.date_column_name = date_column_name
-        self.date_format = date_format
-        self.sep = sep
         self.config = config
         if build_mode not in BUILD_MODES:
             raise ValueError(f'Build mode should be one of {BUILD_MODES}')
@@ -33,7 +30,7 @@ class DataBuilder:
 
     def _add_merger_field(self) -> None:
         """ Reformat date field to have unique merge field for the join """
-        self.data[MERGER_FIELD] = self.data[self.date_column_name].dt.strftime('%Y-%m')
+        self.data[MERGER_FIELD] = self.data[self.config.get('date_column')].dt.strftime('%Y-%m')
         return self
 
 
@@ -77,7 +74,7 @@ class DataBuilderCSV(DataBuilder):
     Data loader class for csv format
     """
     def read(self) -> pd.DataFrame:
-        data = pd.read_csv(self.path, sep=self.sep)
+        data = pd.read_csv(self.path, sep=self.config.get('sep'))
         return data
 
 
@@ -90,11 +87,10 @@ class DataBuilderFactory:
     and if statement in this class
     """
 
-    def __new__(cls, path: str, date_column_name: str, date_format: str, sep: str, \
-        config: dict, build_mode: str, cols_to_drop: list, text_translation: dict = None):
+    def __new__(cls, path: str, config: dict, build_mode: str, cols_to_drop: list, \
+            text_translation: dict = None):
         if path.endswith('.csv'):
-            return DataBuilderCSV(path, date_column_name, date_format, sep, \
-                config, build_mode, cols_to_drop, text_translation)
+            return DataBuilderCSV(path, config, build_mode, cols_to_drop, text_translation)
         else:
             raise ValueError('Unsupported data format.')
     
@@ -118,9 +114,6 @@ if __name__ == '__main__':
 
     # read and clean both datasets
     client_builder = DataBuilderFactory(DATA_PATH,
-                       LAST_CONTACT_DATE,
-                       DATA_DATE_FORMAT,
-                       DATA_SEP,
                        config_client_data,
                        'production',
                        CLIENT_COLUMNS_TO_DROP,
@@ -129,9 +122,6 @@ if __name__ == '__main__':
     client_data = client_builder.preprocess_data().data
     
     economic_builder = DataBuilderFactory(ECO_DATA_PATH,
-                                      END_MONTH,
-                                      ECO_DATA_DATE_FORMAT,
-                                      ECO_DATA_SEP,
                                       config_eco_data,
                                       'production',
                                       ECO_COLUMNS_TO_DROP)
