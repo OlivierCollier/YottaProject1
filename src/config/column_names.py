@@ -32,6 +32,4 @@ TARGET = HAS_SUBSCRIBED
 
 
 MERGER_FIELD = 'YEAR-MONTH'
-=======
 TARGET = HAS_SUBSCRIBED
->>>>>>> a75ae05 (:pencil2: Fixing column names in column_names.py)
