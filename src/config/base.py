@@ -15,6 +15,10 @@ MODELS_DIR = os.path.join(REPO_DIR, 'models')
 NOTEBOOKS_DIR = os.path.join(REPO_DIR, 'notebooks')
 CONFIG_DIR = os.path.join(REPO_DIR, 'src/config')
 
+# Datasets files
+CLIENT_DATA_FILE_NAME = 'data.csv'
+ECO_DATA_FILE_NAME = 'socio_eco.csv'
+
 
 # Config file
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.yml')
