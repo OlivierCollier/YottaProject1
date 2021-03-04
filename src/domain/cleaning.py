@@ -1,7 +1,9 @@
 
+import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from scipy.stats.mstats import winsorize
+
+import src.config.columns_names as col
 
 
 def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:
@@ -86,10 +88,10 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 
 	def _impute_single_column_from_job_type(self, column_name: str, method):
 		"""Imputes missing values for a single variable using JOB_TYPE."""
-		relevant_observations = (~self.data['JOB_TYPE'].isnull()) & (self.data[column_name].isnull())
-		corresponding_job_types = self.data.loc[relevant_observations, 'JOB_TYPE']
-		replacements = self.data[['JOB_TYPE', column_name]] \
-			.groupby('JOB_TYPE') \
+		relevant_observations = (~self.data[col.JOB_TYPE].isnull()) & (self.data[column_name].isnull())
+		corresponding_job_types = self.data.loc[relevant_observations, col.JOB_TYPE]
+		replacements = self.data[[col.JOB_TYPE, column_name]] \
+			.groupby(col.JOB_TYPE) \
 			.agg(method) \
 			.to_dict()
 		self.data.loc[relevant_observations, column_name] = \
@@ -124,13 +126,13 @@ class OutlierTreatment(BaseEstimator, TransformerMixin):
 		self.data = data
 		return self
 
-	def transform(self, data: pd.DataFrame) -> pd.DataFrame:
+	def transform(self, data: pd.DataFrame, upper_clips: dict) -> pd.DataFrame:
 		"""Deal with outliers for given columns."""
-		self._winsorize()
+		self._clip(upper_clips)
 		return self.data
 
-	def _winsorize(self):
-		"""Winsorizes outliers."""
+	def _clip(self, upper_clips: dict):
+		"""Clips outliers."""
 		for column_name in self.column_names:
-			self.data[column_name] = winsorize(self.data[column_name], limits=[0, .01])
+			self.data[column_name] = np.clip(self.data[column_name], a_min=0, a_max=upper_clips[column_name])
 		return self
