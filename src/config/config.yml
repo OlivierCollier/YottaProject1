@@ -1,6 +1,7 @@
 subscription:
   name: 'data.csv'
   date_format: '%Y-%m-%d'
+  date_column: 'DATE'
   sep: ';'
   cast_types:
     'DATE': datetime64
@@ -8,6 +9,7 @@ subscription:
 economic_info:
   name: 'socio_eco.csv'
   date_format: '%Y-%m-%d'
+  date_column: 'DATE'
   sep: ';'
   cast_types:
     'DATE': datetime64
