@@ -7,7 +7,10 @@ from src.config.base import *
 from src.config.column_names import *
 
 
+# Global variables
 BUILD_MODES = ['production', 'eda']
+MERGING_METHODS = ['left', 'right', 'outer', 'inner', 'cross']
+
 
 
 class DataBuilder:
@@ -95,18 +98,31 @@ class DataBuilderFactory:
             raise ValueError('Unsupported data format.')
     
 
-@dataclass
-class Join:
-    client_data_left: pd.DataFrame
-    economic_data_right: pd.DataFrame
-    joined_data = None
+class DataMerger:
+    """
+        Class to merge two datasets together
+    """
 
-    def left_join(self) -> pd.DataFrame:
-        self.joined_data = self.client_data_left.merge(self.economic_data_right, how='left', on=MERGER_FIELD)
+    def __init__(self, left_dataset: pd.DataFrame, right_dataset: pd.DataFrame, \
+                merge_field: str, how: str = 'left') -> None:
+        self.left_dataset = left_dataset
+        self.right_dataset = right_dataset
+        self.merge_field = merge_field
+        if how not in MERGING_METHODS:
+            raise ValueError(f'How argument must be in {MERGING_METHODS}')
+        self.how = how
+        self.joined_datasets = None
+
+
+    def merge_datasets(self) -> pd.DataFrame:
+        """ Merge both datasets """
+        self.joined_data = self.left_dataset.merge(self.right_dataset, how=self.how, \
+            on=self.merge_field)
         self.joined_data.drop([MERGER_FIELD], axis=1, inplace=True)
-        #return joined_data
+
 
     def save(self, out_path: str):
+        """ Save the merged dataset """
         self.joined_data.to_csv(out_path)
 
 
@@ -128,6 +144,6 @@ if __name__ == '__main__':
     economic_data = economic_builder.preprocess_data().data
 
     # join datasets and merge 
-    join = Join(client_data, economic_data)
-    join.left_join()
-    join.save(PROCESSED_DATA_PATH)
+    merged = DataMerger(client_data, economic_data, merge_field=MERGER_FIELD)
+    merged.merge_datasets()
+    merged.save(PROCESSED_DATA_PATH)
