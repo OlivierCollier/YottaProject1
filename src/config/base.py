@@ -58,13 +58,19 @@ EDUCATION_TRANSLATION = {
     'Secondaire': 'Secondary education',
     'Primaire': 'Primary education'
 }
-FAMILY_STATUS_TRANSLATION = {
+MARITAL_STATUS_TRANSLATION = {
     'Marié': 'Married',
     'Célibataire': 'Single',
     'Divorcé': 'Divorced'
 }
+RESULT_LAST_CAMPAIGN_TRANSLATION = {
+    'Echec': 'Fail'
+    'Autre': 'Other'
+    'Succes': 'Success'
+}
 ALL_CLIENT_DATA_TRANSLATION = {
     JOB_TYPE: JOB_TYPE_TRANSLATION,
     EDUCATION: EDUCATION_TRANSLATION,
-    FAMILY_STATUS: FAMILY_STATUS_TRANSLATION
+    MARITAL_STATUS: MARITAL_STATUS_TRANSLATION
+    RESULT_LAST_CAMPAIGN: RESULT_LAST_CAMPAIGN_TRANSLATION
 }
