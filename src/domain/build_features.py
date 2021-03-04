@@ -3,33 +3,31 @@ import numpy as np
 import pandas as pd
 
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import LabelEncoder, FunctionTransformer, OneHotEncoder, Binarizer
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, Binarizer, KBinsDiscretizer
 from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.base import BaseEstimator, TransformerMixin
+from category_encoders.target_encoder import TargetEncoder
+
+import src.config.columns_names as col
 
 
-class CategoricalToBinaryTransformer(BaseEstimator, TransformerMixin):
+def build_feature_engineering_pipeline():
+    """Creates pipeline for feature engineering."""
 
-    def __init__(self, category):
-        self.category = category
+    AgeTransformer = FeatureUnion([
+        ('is_not_young', Binarizer(25)),
+        ('is_old', Binarizer(60)),
+        ('distance_from_40', FunctionTransformer(lambda x: abs(x - 40)))
+    ])
 
-    def fit(self, X, y=None):
-        return self
+    pipeline = ColumnTransformer([
+        ('binary_transformer', FunctionTransformer(lambda x: x == 'Yes'), [col.HAS_DEFAULT, col.HAS_HOUSING_LOAN, col.HAS_PERSO_LOAN]),
+        ('status_transformer', FunctionTransformer(lambda x: x == 'Single'), [col.MARITAL_STATUS]),
+        ('result_transformer', FunctionTransformer(lambda x: x == 'Success'), [col.RESULT_LAST_CAMPAIGN]),
+        ('indicator_transformer', Binarizer(0), [col.ACCOUNT_BALANCE, col.NB_DAYS_LAST_CONTACT]),
+        ('inverse_transformer', FunctionTransformer(lambda x: 1/x), [col.NB_DAYS_LAST_CONTACT, col.NB_CONTACTS]),
+        ('age_transformer', AgeTransformer, [col.AGE]),
+        ('target_encoder', TargetEncoder(), [col.JOB_TYPE, col.EDUCATION]),
+        ('identity', 'passthrough', [col.NB_CONTACTS])],
+        remainder='drop')
 
-    def transform(self, X, y=None):
-        transformed = X.eq(self.category).astype(int)
-        return transformed
-
-AgeTransformer = FeatureUnion([
-    ()
-])
-
-
-pipeline = ColumnTransformer([
-    ('binary_transformer', OneHotEncoder(drop='first'), ['HAS_DEFAULT', 'HAS_HOUSING_LOAN', 'HAS_PERSO_LOAN']),
-    ('categorical_simplifier1', CategoricalToBinaryTransformer('Célibataire'), ['STATUS']),
-    ('categorical_simplifier2', CategoricalToBinaryTransformer('Succes'), ['RESULT_LAST_CAMPAIGN']),
-    ('indicator_transformer', Binarizer(), ['BALANCE', 'NB_DAY_LAST_CONTACT']),
-    ('inverse_transformer', FunctionTransformer(lambda x: 1/x), ['NB_DAY_LAST_CONTACT'])
-]
-)
+    return pipeline
