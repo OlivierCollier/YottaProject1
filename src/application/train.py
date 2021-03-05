@@ -7,7 +7,9 @@ import os
 
 import ipdb
 import src.config.base as base
-from src.infrastructure.build_dataset import DataBuilderFactory
+from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
+from sklearn.model_selection import train_test_split
+
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Files containing the training datasets', \
@@ -27,8 +29,28 @@ args = parser.parse_args()
 
 
 # Build datasets
-client_data = DataBuilderFactory(args.client_file, base.config_client_data, 'production', \
+client_builder = DataBuilderFactory(args.client_file, base.config_client_data, 'production', \
                                 base.CLIENT_COLUMNS_TO_DROP, base.ALL_CLIENT_DATA_TRANSLATION)
-eco_data = DataBuilderFactory(args.eco_file, base.config_eco_data, 'production', \
-                            base.ECO_COLUMNS_TO_DROP)
+client_data = client_builder.preprocess_data().data
 
+eco_builder = DataBuilderFactory(args.eco_file, base.config_eco_data, 'production', \
+                            base.ECO_COLUMNS_TO_DROP)
+eco_data = eco_builder.preprocess_data().data
+
+
+# Impute NaN from the socio-eco dataset
+# This step is being done outside the pipeline because the imputation is row-wise
+# rather than column-wise, which makes it not doable in the pipeline
+
+
+# Merger client and eco datasets
+merged = DataMerger(client_data, eco_data, base.MERGER_FIELD)
+merged.merge_datasets()
+merged.save(base.PROCESSED_DATA_PATH)
+merged_data = merged.joined_datasets
+merged_data_X = merged_data.drop(columns=base.TARGET)
+merged_data_y = merged_data[base.TARGET]
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y, 
+                                        test_size=0.2, random_state=base.SEED)
