@@ -64,8 +64,8 @@ MARITAL_STATUS_TRANSLATION = {
     'Divorcé': 'Divorced'
 }
 RESULT_LAST_CAMPAIGN_TRANSLATION = {
-    'Echec': 'Fail'
-    'Autre': 'Other'
+    'Echec': 'Fail',
+    'Autre': 'Other',
     'Succes': 'Success'
 }
 ALL_CLIENT_DATA_TRANSLATION = {
