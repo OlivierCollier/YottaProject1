@@ -5,6 +5,9 @@ subscription:
   sep: ';'
   cast_types:
     'DATE': datetime64
+  wrong_entries:
+    'AGE': 123 
+
 
 economic_info:
   name: 'socio_eco.csv'
