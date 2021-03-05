@@ -7,7 +7,7 @@ from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, Binarizer,
 from sklearn.pipeline import Pipeline, FeatureUnion
 from category_encoders.target_encoder import TargetEncoder
 
-import src.config.columns_names as col
+import src.config.column_names as col
 
 
 def build_feature_engineering_pipeline():
