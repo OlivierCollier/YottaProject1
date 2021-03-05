@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-import src.config.columns_names as col
+import src.config.column_names as col
 
 
 def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:

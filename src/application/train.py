@@ -9,6 +9,7 @@ import ipdb
 import src.config.base as base
 import src.config.column_names as col
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
+from src.domain.cleaning import impute_missing_eco_data
 from sklearn.model_selection import train_test_split
 
 
@@ -42,6 +43,7 @@ eco_data = eco_builder.preprocess_data().data
 # Impute NaN from the socio-eco dataset
 # This step is being done outside the pipeline because the imputation is row-wise
 # rather than column-wise, which makes it not doable in the pipeline
+eco_data = impute_missing_eco_data(eco_data)
 
 
 # Merger client and eco datasets
