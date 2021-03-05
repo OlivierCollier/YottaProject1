@@ -1,9 +1,9 @@
 
+import ipdb
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
-
 import src.config.column_names as col
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:
@@ -35,7 +35,10 @@ def correct_wrong_entries(data: pd.DataFrame, corrections: dict) -> pd.DataFrame
 	-------
 	corrected_data: pd.DataFrame
 	"""
-	corrected_data = data.replace(corrections)
+	to_replace = {k: {v: np.nan} for k, v in corrections.items()}
+
+	corrected_data = data.replace(to_replace)
+	
 	return corrected_data
 
 

@@ -9,7 +9,7 @@ import ipdb
 import src.config.base as base
 import src.config.column_names as col
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
-from src.domain.cleaning import impute_missing_eco_data
+from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data
 from sklearn.model_selection import train_test_split
 
 
@@ -45,6 +45,9 @@ eco_data = eco_builder.preprocess_data().data
 # rather than column-wise, which makes it not doable in the pipeline
 eco_data = impute_missing_eco_data(eco_data)
 
+# Fix wrong entries in client dataset
+client_data = correct_wrong_entries(client_data, base.config_client_data.get('wrong_entries'))
+
 
 # Merger client and eco datasets
 merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
@@ -56,3 +59,4 @@ merged_data_y = merged_data[col.TARGET]
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y, 
                                         test_size=0.2, random_state=base.SEED)
+
