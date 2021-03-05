@@ -116,14 +116,14 @@ class DataMerger:
 
     def merge_datasets(self) -> pd.DataFrame:
         """ Merge both datasets """
-        self.joined_data = self.left_dataset.merge(self.right_dataset, how=self.how, \
+        self.joined_datasets = self.left_dataset.merge(self.right_dataset, how=self.how, \
             on=self.merge_field)
-        self.joined_data.drop([MERGER_FIELD], axis=1, inplace=True)
+        self.joined_datasets.drop([MERGER_FIELD], axis=1, inplace=True)
 
 
     def save(self, out_path: str):
         """ Save the merged dataset """
-        self.joined_data.to_csv(out_path)
+        self.joined_datasets.to_csv(out_path)
 
 
 if __name__ == '__main__':
