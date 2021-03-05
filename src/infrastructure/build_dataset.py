@@ -65,9 +65,9 @@ class DataBuilder:
     def preprocess_data(self) -> pd.DataFrame:
         """ Run preprocess tasks """
         processed_data = self._cast_types() \
-                             ._drop_columns() \
                              ._replace_translation() \
-                             ._add_merger_field()
+                             ._add_merger_field() \
+                             ._drop_columns()
 
         return processed_data
 
