@@ -1,7 +1,7 @@
 import os
 
 from src.config.config import read_yaml
-from src.config.column_names import *
+import src.config.column_names as col
 
 # Directories
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -39,10 +39,11 @@ PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
 
 # Columns to drop from datasets in EDA mode
 CLIENT_COLUMNS_TO_DROP = [
-    LAST_CONTACT_DURATION,
-    COMMUNICATION_TYPE
+    col.LAST_CONTACT_DURATION,
+    col.COMMUNICATION_TYPE
 ]
 ECO_COLUMNS_TO_DROP = [
+    col.END_MONTH
 ]
 
 
@@ -73,10 +74,10 @@ RESULT_LAST_CAMPAIGN_TRANSLATION = {
     'Succes': 'Success'
 }
 ALL_CLIENT_DATA_TRANSLATION = {
-    JOB_TYPE: JOB_TYPE_TRANSLATION,
-    EDUCATION: EDUCATION_TRANSLATION,
-    MARITAL_STATUS: MARITAL_STATUS_TRANSLATION,
-    RESULT_LAST_CAMPAIGN: RESULT_LAST_CAMPAIGN_TRANSLATION
+    col.JOB_TYPE: JOB_TYPE_TRANSLATION,
+    col.EDUCATION: EDUCATION_TRANSLATION,
+    col.MARITAL_STATUS: MARITAL_STATUS_TRANSLATION,
+    col.RESULT_LAST_CAMPAIGN: RESULT_LAST_CAMPAIGN_TRANSLATION
 }
 
 SEED=21
