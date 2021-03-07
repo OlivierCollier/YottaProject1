@@ -64,16 +64,23 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 
 	"""
 
-	def __init__(self, categorical_variables: list, continuous_variables: list):
+	def __init__(self):
 		self.data = None
-		self.categorical_variables = categorical_variables
-		self.continuous_variables = continuous_variables
+		self.categorical_variables = None
+		self.continuous_variables = None
 
-	def fit(self, data: pd.DataFrame):
+	def fit(self, data: pd.DataFrame, y=None):
 		self.data = data
+
+		cat_variables = self.data.select_dtypes(include='object').columns.tolist()
+		cat_variables.remove(col.JOB_TYPE)
+		self.categorical_variables = cat_variables
+		
+		self.continuous_variables = self.data.select_dtypes(include='number').columns.tolist()
+
 		return self
 
-	def transform(self, data: pd.DataFrame) -> pd.DataFrame:
+	def transform(self, data: pd.DataFrame, y=None) -> pd.DataFrame:
 		"""Imputes missing values using JOB_TYPE then removes remaining ones."""
 		self._impute_from_job_type()
 		self._remove_remaining_rows_with_missing_values()
