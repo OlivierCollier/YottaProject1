@@ -4,14 +4,18 @@
 """
 import argparse
 import os
-
 import ipdb
+
 import src.config.base as base
 import src.config.column_names as col
-from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score
+from sklearn.model_selection import RandomizedSearchCV, train_test_split
+from sklearn.pipeline import make_pipeline
+from src.domain.build_features import build_preprocessing_pipeline
 from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data
-from sklearn.model_selection import train_test_split
-
+from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Files containing the training datasets', \
@@ -48,15 +52,37 @@ eco_data = impute_missing_eco_data(eco_data)
 # Fix wrong entries in client dataset
 client_data = correct_wrong_entries(client_data, base.config_client_data.get('wrong_entries'))
 
-
 # Merger client and eco datasets
 merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
 merged.merge_datasets()
 merged.save(base.PROCESSED_DATA_PATH)
 merged_data = merged.joined_datasets
+merged_data.dropna(axis=0, subset=[col.JOB_TYPE], inplace=True)
 merged_data_X = merged_data.drop(columns=col.TARGET)
 merged_data_y = merged_data[col.TARGET]
+
+preprocessing_pipeline = build_preprocessing_pipeline()
+
 # Train-test split
+merged_data_y = merged_data_y.eq('Yes').astype(int)
 X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y, 
                                         test_size=0.2, random_state=base.SEED)
 
+# Initialize pipelines and models
+rf = RandomForestClassifier()
+log_reg = LogisticRegression()
+
+out = preprocessing_pipeline.fit_transform(X_train, y_train)
+ipdb.set_trace()
+# pipeline = make_pipeline(fe_pipeline, log_reg)
+
+# param_distrib = {
+#     'logisticregression__C': [0.001, 0.01, 0.1, 1, 10]
+# }
+
+# random_search = RandomizedSearchCV(pipeline, param_distrib, cv=5)
+# random_search.fit(X_train, y_train)
+# print('Fitting model')
+
+# y_pred = random_search.predict(X_test)
+# print(f'Model was trained with a precision of {precision_score(y_test, y_pred)} on the test set')
