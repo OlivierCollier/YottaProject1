@@ -82,6 +82,7 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 
 	def transform(self, data: pd.DataFrame, y=None) -> pd.DataFrame:
 		"""Imputes missing values using JOB_TYPE then removes remaining ones."""
+		self.data = data
 		self._impute_from_job_type()
 		self._remove_remaining_rows_with_missing_values()
 		return self.data
