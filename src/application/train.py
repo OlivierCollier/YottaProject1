@@ -1,6 +1,6 @@
 """
     This class is one of the two entrypoints with predict.py.
-    This class is used to train a ML model with some training date.
+    This class is used to train a ML model with some training data.
 """
 import argparse
 import os
@@ -14,6 +14,7 @@ from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from src.domain.build_features import build_pipeline
 from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
+
 
 # Parse arguments
 parser = argparse.ArgumentParser(description='Files containing the training datasets', \
@@ -43,12 +44,11 @@ eco_data = eco_builder.preprocess_data().data
 
 
 # Impute NaN from the socio-eco dataset
-# This step is being done outside the pipeline because the imputation is row-wise
-# rather than column-wise, which makes it not doable in the pipeline
+# This step is done outside the pipeline to avoid duplication of Nan after the merge
 eco_data = impute_missing_eco_data(eco_data)
-
 # Fix wrong entries in client dataset
 client_data = correct_wrong_entries(client_data, base.config_client_data.get('wrong_entries'))
+
 
 # Merger client and eco datasets
 merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
@@ -59,6 +59,7 @@ merged_data_X = merged_data.drop(columns=col.TARGET)
 merged_data_y = merged_data[col.TARGET]
 
 
+# Load pipeline
 processing_pipeline = build_pipeline()
 
 
@@ -68,16 +69,21 @@ X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y
                                         test_size=0.2, random_state=base.SEED)
 
 
+
+
+# Initialize Random search
+clf = RandomizedSearchCV(estimator=processing_pipeline, param_distributions = base.LOGISTIC_REGRESSION_PARAM, 
+                        scoring='precision', random_state=base.SEED, cv=5)
+
 # Fit the model
-processing_pipeline.fit(X_train, y_train)
+clf.fit(X_train, y_train)
 
 
 # Make prediction on test set
-y_pred = processing_pipeline.predict(X_test)
-ipdb.set_trace()
+y_pred = clf.predict(X_test)
 
 
 # Save model 
-with open(base.SAVED_MODEL_PATH, 'wb') as file:
-    pickle.dump(processing_pipeline, file)
+# with open(base.SAVED_MODEL_PATH, 'wb') as file:
+#     pickle.dump(processing_pipeline, file)
 
