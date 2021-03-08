@@ -80,4 +80,10 @@ ALL_CLIENT_DATA_TRANSLATION = {
     col.RESULT_LAST_CAMPAIGN: RESULT_LAST_CAMPAIGN_TRANSLATION
 }
 
+
+# Initialize random seed
 SEED=21
+
+
+# Path to model saved
+SAVED_MODEL_PATH = os.path.join(MODELS_DIR, 'ml_model.pkl')
