@@ -10,6 +10,7 @@ from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, Binarizer,
 from sklearn.pipeline import Pipeline, FeatureUnion, make_pipeline
 from category_encoders.target_encoder import TargetEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.linear_model import LogisticRegression
 
 
 import src.config.column_names as col
@@ -76,12 +77,13 @@ def feature_engineering_transformer():
 
     return transformer
 
-def build_preprocessing_pipeline():
+def build_pipeline():
     """ Creates the pipeline including NA imputation and feature engineering """
     feature_engineering = feature_engineering_transformer()
 
-    pipeline = make_pipeline(MissingValueTreatment()
-    ,feature_engineering)
+    pipeline = Pipeline([('imputer', MissingValueTreatment()),
+                        ('feature_engineering', feature_engineering),
+                        ('log_reg_clf', LogisticRegression())])
 
 
     return pipeline
