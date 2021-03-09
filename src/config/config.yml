@@ -5,6 +5,8 @@ subscription:
   sep: ';'
   cast_types:
     'DATE': datetime64
+    'AGE': int64
+    'BALANCE': 'float64'
   wrong_entries:
     'AGE': 123 
   filters:
