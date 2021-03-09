@@ -18,7 +18,9 @@ def load_initial_data():
 
 def illustrate_target(data):
     sns.countplot(data.SUBSCRIPTION)
-    plt.xlabel('HAS_SUBSCRIBED')
+    plt.xlabel('Valeurs de la variable HAS_SUBSCRIBED')
+    plt.ylabel("Effectif")
+    plt.title("Répartition de la variable HAS_SUBSCRIBED")
     plt.show()
 
 def make_has_subscribed_binary(data):
@@ -30,6 +32,7 @@ def correlation_target_balance(data, upper_clip=None, lower_clip=None):
     pearson = data_copy[['BALANCE', 'SUBSCRIPTION']].corr('pearson')['SUBSCRIPTION'][0]
     spearman = data_copy[['BALANCE', 'SUBSCRIPTION']].corr('spearman')['SUBSCRIPTION'][0]
     table = pd.DataFrame([pearson, spearman], columns=[''], index=['Corrélation de Pearson', 'Rho de Spearman'])
+    table.columns.name = 'Mesures de corrélation entre la cible et ACCOUNT_BALANCE'
     display(table)
 
 def clip_balance(data, upper_clip=None, lower_clip=None):
@@ -37,8 +40,9 @@ def clip_balance(data, upper_clip=None, lower_clip=None):
 
 def plot_balance_knowing_target(data):
     sns.catplot(y='BALANCE', x='SUBSCRIPTION', kind='violin', data=data)
-    plt.xlabel('HAS_SUBSCRIBED')
-    plt.ylabel('clipped ACCOUNT_BALANCE')
+    plt.xlabel('Values of HAS_SUBSCRIBED')
+    plt.ylabel('Clipped values of ACCOUNT_BALANCE')
+    plt.title('Violin plot of clipped ACCOUNT_BALANCE')
     plt.show()
 
 def test_independence_between_balance_and_target(data):
@@ -63,7 +67,9 @@ def remove_missing_values_for_job_type(data):
 
 def illustrate_status(data):
     sns.countplot(data.STATUS)
-    plt.xlabel('MARITAL_STATUS')
+    plt.xlabel('Values of MARITAL_STATUS')
+    plt.ylabel('Effectif')
+    plt.title('Distribution de MARITAL_STATUS')
     plt.show()
 
 def target_by_marital_status(data):
@@ -156,6 +162,7 @@ def show_predictions_subscription_rate_without_retired(data):
 
 def show_mean_age_by_job_type(data):
     table = data.loc[~data.AGE.eq(123), ['AGE', 'JOB_TYPE']].groupby('JOB_TYPE').agg('mean')
+    table.columns = ['Mean age']
     display(table)
 
 def replace_age123_by_mean_in_job_type(data):
@@ -173,6 +180,7 @@ def plot_age_histogram(data):
                 common_norm=False,
                 element='step',
                 palette='bright')
+    plt.title("Densité de l'âge des souscripteurs et des non-souscripteurs")
     plt.show()
 
 def plot_date_by_year(data):
@@ -185,11 +193,15 @@ def plot_date_by_year(data):
     data['WEEKDAY'] = data['date'].apply(lambda x: weekdays[x.weekday()])
     sns.countplot(data.year)
     plt.xlabel('YEAR')
+    plt.ylabel('Effectif')
+    plt.title("Nombre de clients contactés par an")
     plt.show()
 
 def plot_date_year_and_month(data):
     sns.countplot(data['year-month'])
-    plt.xlabel('YEAR-MONTH')
+    plt.xlabel('Mois et année')
+    plt.ylabel('Effectif')
+    plt.title("Nombre de clients contactés par mois")
     plt.xticks([0, 7, 13, 19, 25], ('2008-05', '2009-01', '2009-07', '2010-01', '2010-07'))
     plt.show()
 
@@ -213,6 +225,8 @@ def show_table_subscription_by_month(data):
 
 def plot_education(data):
     sns.countplot(data['EDUCATION'])
+    plt.ylabel('Effectif')
+    plt.title("Distribution de la variable EDUCATION")
     plt.show()
 
 def show_table_subscription_by_education(data):
@@ -224,7 +238,11 @@ def show_table_subscription_by_education(data):
 def plot_has_housing_and_perso_loan(data):
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
     sns.countplot(ax=ax[0], x='HAS_HOUSING_LOAN', data=data)
+    plt.ylabel('Effectif')
+    plt.title("Distribution de la variable HAS_HOUSING_LOAN")
     sns.countplot(ax=ax[1], x='HAS_PERSO_LOAN', data=data)
+    plt.ylabel('Effectif')
+    plt.title("Distribution de la variable HAS_PERSO_LOAN")
     plt.show()
 
 def show_correlation_loan_variables_with_target(data):
@@ -240,6 +258,8 @@ def show_correlation_loan_variables_with_target(data):
 
 def plot_has_default(data):
     sns.countplot(data['HAS_DEFAULT'])
+    plt.ylabel('Effectif')
+    plt.title('Distribution de la variable HAS_DEFAULT')
     plt.show()
 
 def compute_correlation_has_default_target(data):
@@ -252,6 +272,7 @@ def missing_values_percentage_of_result_by_month(data):
         .groupby('year-month')\
         .agg(lambda x: 100 * x.isnull().sum() / len(x))
     plt.plot(table)
+    plt.xlabel('Month')
     plt.ylabel('Percentage')
     plt.title('Percentage of missing values by month')
     plt.xticks([0, 7, 13, 19, 25], ('2008-05', '2009-01', '2009-07', '2010-01', '2010-07'))
@@ -289,7 +310,8 @@ def histogram_nb_contacts(data):
     plt.hist(data['NB_CONTACT'])
     plt.ylabel('Count')
     plt.xlabel('NB_CONTACTS')
-    plt.title('Distribution of NB_CONTACTS')
+    plt.ylabel('Effectif')
+    plt.title('Distribution de NB_CONTACTS')
     plt.show()
 
 def clip_nb_contacts(data):
