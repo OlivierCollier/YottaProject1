@@ -6,6 +6,10 @@ import argparse
 import os
 import ipdb
 import pickle
+from warnings import simplefilter
+
+import pandas as pd
+from pandas.core.common import SettingWithCopyWarning
 
 import src.config.base as base
 import src.config.column_names as col
@@ -14,6 +18,11 @@ from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from src.domain.build_features import build_pipeline
 from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
+
+
+# Ignore warnings
+# simplefilter(action='ignore', category=SettingWithCopyWarning)
+# simplefilter(action='ignore', category=FutureWarning)
 
 
 # Parse arguments
@@ -54,7 +63,6 @@ client_data = correct_wrong_entries(client_data, base.config_client_data.get('wr
 merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
 merged.merge_datasets()
 merged_data = merged.joined_datasets
-merged_data.dropna(axis=0, subset=[col.JOB_TYPE], inplace=True)
 merged_data_X = merged_data.drop(columns=col.TARGET)
 merged_data_y = merged_data[col.TARGET]
 
@@ -69,18 +77,17 @@ X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y
                                         test_size=0.2, random_state=base.SEED)
 
 
-
-
 # Initialize Random search
-clf = RandomizedSearchCV(estimator=processing_pipeline, param_distributions = base.LOGISTIC_REGRESSION_PARAM, 
-                        scoring='precision', random_state=base.SEED, cv=5)
+# clf = RandomizedSearchCV(estimator=processing_pipeline, param_distributions = base.LOGISTIC_REGRESSION_PARAM, 
+                        # scoring='precision', random_state=base.SEED, cv=5)
 
 # Fit the model
-clf.fit(X_train, y_train)
+processing_pipeline.fit(X_train, y_train)
+
 
 
 # Make prediction on test set
-y_pred = clf.predict(X_test)
+y_pred = processing_pipeline.predict(X_test)
 
 
 # Save model 

@@ -1,8 +1,10 @@
 
+from inspect import indentsize
 import ipdb
 import numpy as np
 import pandas as pd
 import src.config.column_names as col
+import src.config.base as base
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
@@ -66,26 +68,51 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 
 	def __init__(self):
 		self.data = None
+		self.y = None
 		self.categorical_variables = None
 		self.continuous_variables = None
 
-	def fit(self, data: pd.DataFrame, y=None):
+	def fit(self, data: pd.DataFrame, y):
 		self.data = data
-
-		cat_variables = self.data.select_dtypes(include='object').columns.tolist()
+		self.y = y
+		cat_variables = data.select_dtypes(include='object').columns.tolist()
 		cat_variables.remove(col.JOB_TYPE)
 		self.categorical_variables = cat_variables
 		
-		self.continuous_variables = self.data.select_dtypes(include='number').columns.tolist()
+		self.continuous_variables = data.select_dtypes(include='number').columns.tolist()
 
 		return self
 
 	def transform(self, data: pd.DataFrame, y=None) -> pd.DataFrame:
 		"""Imputes missing values using JOB_TYPE then removes remaining ones."""
-		self.data = data
+		self._drop_rows_without_age_jobtype()
+		self._impute_job_type()
 		self._impute_from_job_type()
 		self._remove_remaining_rows_with_missing_values()
-		return self.data
+		return self.data, self.y
+
+	def _impute_job_type(self):
+		"""Imputes missing values of JOB_TYPE column given AGE value"""
+		def _age_imputation(age):
+			if age < 25:
+				return base.JOB_TYPE_TRANSLATION.get('Etudiant')
+			elif age > 60:
+				return base.JOB_TYPE_TRANSLATION.get('Retraité')
+			else:
+				return self.data['JOB_TYPE'].mode()[0]
+		
+		self.data.loc[pd.isna(self.data[col.JOB_TYPE]),col.JOB_TYPE] = \
+			self.data.loc[pd.isna(self.data[col.JOB_TYPE]),col.AGE].map(lambda x: _age_imputation(x))
+		return self
+
+	def _drop_rows_without_age_jobtype(self):
+		"""Drops rows where AGE and JOB_TYPE are missing. We consider that too 
+		much information is missing """
+		idx_to_drop = self.data.loc[(pd.isna(self.data[col.JOB_TYPE])) 
+									& (pd.isna(self.data[col.AGE])),:].index
+		self.data = self.data.drop(index=idx_to_drop)
+		self.y = self.y.drop(index=idx_to_drop)
+		return self
 
 	def _impute_from_job_type(self):
 		"""Imputes missing values using JOB_TYPE."""
