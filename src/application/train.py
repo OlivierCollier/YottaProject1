@@ -4,21 +4,23 @@
 """
 import argparse
 import os
-import ipdb
 import pickle
 from warnings import simplefilter
 
+import ipdb
 import pandas as pd
-from pandas.core.common import SettingWithCopyWarning
-
 import src.config.base as base
 import src.config.column_names as col
+from pandas.core.common import SettingWithCopyWarning
 from sklearn.metrics import precision_score
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
-from src.domain.build_features import build_pipeline
-from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data
-from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
 
+
+from src.domain.build_features import feature_engineering_transformer
+from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data, MissingValueTreatment
+from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 
 # Ignore warnings
 # simplefilter(action='ignore', category=SettingWithCopyWarning)
@@ -68,7 +70,10 @@ merged_data_y = merged_data[col.TARGET]
 
 
 # Load pipeline
-processing_pipeline = build_pipeline()
+pipeline = Pipeline([('imputer', MissingValueTreatment())
+                        ,('feature_engineering', feature_engineering_transformer())
+                        ,('log_reg_clf', LogisticRegression())
+                        ])
 
 
 # Train-test split
@@ -82,13 +87,13 @@ X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y
                         # scoring='precision', random_state=base.SEED, cv=5)
 
 # Fit the model
-processing_pipeline.fit(X_train, y_train)
-
+pipeline.fit(X_train, y_train)
 
 
 # Make prediction on test set
-y_pred = processing_pipeline.predict(X_test)
-
+print('Make a prediction on test set')
+y_pred = pipeline.predict(X_test)
+ipdb.set_trace()
 
 # Save model 
 # with open(base.SAVED_MODEL_PATH, 'wb') as file:
