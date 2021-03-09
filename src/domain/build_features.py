@@ -77,14 +77,3 @@ def feature_engineering_transformer():
 
     return transformer
 
-def build_pipeline():
-    """ Creates the pipeline including NA imputation and feature engineering """
-    feature_engineering = feature_engineering_transformer()
-
-    pipeline = Pipeline([('imputer', MissingValueTreatment())
-                        ,('feature_engineering', feature_engineering)
-                        ,('log_reg_clf', LogisticRegression())
-                        ])
-
-
-    return pipeline

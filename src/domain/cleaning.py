@@ -72,9 +72,10 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 		self.categorical_variables = None
 		self.continuous_variables = None
 
+
 	def fit(self, data: pd.DataFrame, y):
 		self.data = data
-		self.y = y
+		# self.y = y
 		cat_variables = data.select_dtypes(include='object').columns.tolist()
 		cat_variables.remove(col.JOB_TYPE)
 		self.categorical_variables = cat_variables
@@ -83,13 +84,16 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 
 		return self
 
+
 	def transform(self, data: pd.DataFrame, y=None) -> pd.DataFrame:
 		"""Imputes missing values using JOB_TYPE then removes remaining ones."""
-		self._drop_rows_without_age_jobtype()
+		self.data = data
 		self._impute_job_type()
 		self._impute_from_job_type()
-		self._remove_remaining_rows_with_missing_values()
-		return self.data, self.y
+		# ipdb.set_trace()
+		#self._remove_remaining_rows_with_missing_values()
+		return self.data
+
 
 	def _impute_job_type(self):
 		"""Imputes missing values of JOB_TYPE column given AGE value"""
@@ -105,14 +109,6 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 			self.data.loc[pd.isna(self.data[col.JOB_TYPE]),col.AGE].map(lambda x: _age_imputation(x))
 		return self
 
-	def _drop_rows_without_age_jobtype(self):
-		"""Drops rows where AGE and JOB_TYPE are missing. We consider that too 
-		much information is missing """
-		idx_to_drop = self.data.loc[(pd.isna(self.data[col.JOB_TYPE])) 
-									& (pd.isna(self.data[col.AGE])),:].index
-		self.data = self.data.drop(index=idx_to_drop)
-		self.y = self.y.drop(index=idx_to_drop)
-		return self
 
 	def _impute_from_job_type(self):
 		"""Imputes missing values using JOB_TYPE."""
@@ -123,6 +119,7 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 			method = (lambda x: x.median())
 			self._impute_single_column_from_job_type(column_name, method)
 		return self
+
 
 	def _impute_single_column_from_job_type(self, column_name: str, method):
 		"""Imputes missing values for a single variable using JOB_TYPE."""
@@ -136,41 +133,9 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 			corresponding_job_types.replace(replacements[column_name])
 		return self
 
+
 	def _remove_remaining_rows_with_missing_values(self):
 		"""Removes remaining observations with missing values."""
 		self.data.dropna(inplace=True)
 		return self
 
-
-class OutlierTreatment(BaseEstimator, TransformerMixin):
-	"""Data transformations to deal with outliers.
-
-	Attributes
-	----------
-	data: pd.DataFrame
-	column_names: list
-
-	Methods
-	-------
-	fit(data)
-	transform(data)
-	"""
-
-	def __init__(self, column_names: list):
-		self.data = None
-		self.column_names = column_names
-
-	def fit(self, data: pd.DataFrame):
-		self.data = data
-		return self
-
-	def transform(self, data: pd.DataFrame, upper_clips: dict) -> pd.DataFrame:
-		"""Deal with outliers for given columns."""
-		self._clip(upper_clips)
-		return self.data
-
-	def _clip(self, upper_clips: dict):
-		"""Clips outliers."""
-		for column_name in self.column_names:
-			self.data[column_name] = np.clip(self.data[column_name], a_min=0, a_max=upper_clips[column_name])
-		return self
