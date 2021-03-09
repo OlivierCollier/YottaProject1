@@ -1,89 +1,127 @@
 
-from os import sendfile
-from collections import defaultdict
-import ipdb
 import numpy as np
 import pandas as pd
 
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, Binarizer, KBinsDiscretizer
-from sklearn.pipeline import Pipeline, FeatureUnion, make_pipeline
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, Binarizer
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.base import TransformerMixin, BaseEstimator
 from category_encoders.target_encoder import TargetEncoder
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.linear_model import LogisticRegression
-
 
 import src.config.column_names as col
-from src.domain.cleaning import MissingValueTreatment
 
 
-class CategoriesBinarizer(BaseEstimator, TransformerMixin):
-    """
-        Splits and binarizes all categorical values except one provided value on one hand,
-        and the provided value on the other hand.
-        
-        Attributes
-        ----------
-        single_col_value: str
-            Category value that is separated from all other category values
+class ClipTransformer(BaseEstimator, TransformerMixin):
 
-        Methods
-        -------
-        fit(X, y)
-        transform(X, y)
-    """
+    def __init__(self, a_min, a_max):
+        self.a_min = a_min
+        self.a_max = a_max
 
-    def __init__(self, single_category: str) -> None:
-        self.single_category = single_category
+    def fit(self, X, y=None):
+        self.y = y
+        return self
 
-    
+    def transform(self, X):
+        X_clipped = np.clip(X, self.a_min, self.a_max)
+        return X_clipped
+
+
+class ExtractCategoryTransformer(BaseEstimator, TransformerMixin):
+
+    def __init__(self, category):
+        self.category = category
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X_is_category = X.eq(self.category).astype(int)
+        return X_is_category
+
+
+def AgeTransformer():
+
+    age_transformer = FeatureUnion([
+        ('is-not-young-indicator', Binarizer(25)),
+        ('is-old-indicator', Binarizer(60)),
+        ('identity', FunctionTransformer())
+    ])
+
+    return age_transformer
+
+
+class LogicalUnionTransformer(BaseEstimator, TransformerMixin):
+
+    def __init__(self):
+        pass
+
     def fit(self, X, y=None):
         return self
 
     def transform(self, X, y=None):
-        # single_value_match = {self.single_category: 1}
-        # replacement = defaultdict(lambda: 0, single_value_match)
-        # ipdb.set_trace()
-        # X_replaced = X.map(replacement)
-
-        for column in X.columns:
-            X[column] = np.where(X[col].isin([self.single_category]), 1, 0)
-
-        return X
+        X = X.eq('Yes').astype(int)
+        sum = X.sum(axis=1)
+        prod = X.prod(axis=1)
+        return pd.DataFrame(sum - prod)
 
 
-def feature_engineering_transformer():
+class DateTransformer(BaseEstimator, TransformerMixin):
+
+    def __init__(self):
+        self.y = None
+
+    def fit(self, X, y=None):
+        self.y = y
+        return self
+
+    def transform(self, X):
+        month = X.apply(lambda x: x.apply(lambda y: str(y.month)))
+        target_encoded_month = TargetEncoder().fit_transform(month, self.y)
+        return target_encoded_month
+
+
+class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
+
+    def __init__(self, value_to_replace, n_bins):
+        self.value_to_replace = value_to_replace
+        self.n_bins = n_bins
+        self.X = None
+
+    def bin(self, X):
+        data_to_bin = X[X.ne(self.value_to_replace).to_numpy()]
+        data_to_bin2 = data_to_bin.to_numpy().reshape(1, -1).tolist()[0]
+        groups = pd.qcut(data_to_bin2, self.n_bins)
+        binned_X = data_to_bin.groupby(groups).transform('mean')
+        return binned_X
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X_transformed = X.copy()
+        bins = self.bin(X)
+        X_transformed[X.eq(self.value_to_replace)] = bins.max()[0]
+        X_transformed[X.ne(self.value_to_replace)] = bins
+        return X_transformed
+
+
+def build_feature_engineering_pipeline():
     """Creates pipeline for feature engineering."""
 
-    AgeTransformer = FeatureUnion([
-        ('is_not_young', Binarizer(25)),
-        ('is_old', Binarizer(60)),
-        ('distance_from_40', FunctionTransformer(lambda x: abs(x - 40)))
+    one_hot_encoded_features = [col.HAS_HOUSING_LOAN]#[col.MARITAL_STATUS, col.EDUCATION, col.HAS_HOUSING_LOAN,
+                                #col.HAS_PERSO_LOAN, col.HAS_DEFAULT, col.RESULT_LAST_CAMPAIGN]
+    eco_features = [col.EMPLOYMENT_VARIATION_RATE, col.IDX_CONSUMER_PRICE, col.IDX_CONSUMER_CONFIDENCE]
+
+    pipeline = ColumnTransformer([
+        ('balance-clipper', ClipTransformer(a_min=-4000, a_max=4000), [col.ACCOUNT_BALANCE]),
+        ('nb-clipper', ClipTransformer(a_min=0, a_max=15), [col.NB_CONTACTS_CURRENT_CAMPAIGN, col.NB_CONTACTS_BEFORE_CAMPAIGN]),
+        ('one-hot-encoder', OneHotEncoder(drop='first'), one_hot_encoded_features),
+        ('extract-category', ExtractCategoryTransformer('Retired'), [col.JOB_TYPE]),
+        #('age-transformer', AgeTransformer(), [col.AGE]),
+        ('date-transformer', DateTransformer(), [col.LAST_CONTACT_DATE]),
+        ('sum-transformer', LogicalUnionTransformer(), [col.HAS_PERSO_LOAN, col.HAS_HOUSING_LOAN]),
+        ('nb-days-last-contact-transformer', NbDaysLastContactTransformer(-1, 4), [col.NB_DAYS_LAST_CONTACT]),
+        ('identity', FunctionTransformer(), eco_features)
     ])
-
-    transformer = ColumnTransformer([
-        ('binary_transformer', FunctionTransformer(lambda x: (x == 'Yes')+0), [col.HAS_DEFAULT, col.HAS_HOUSING_LOAN, col.HAS_PERSO_LOAN]),
-        ('status_transformer', FunctionTransformer(lambda x: (x == 'Single')+0), [col.MARITAL_STATUS]),
-        ('result_transformer', FunctionTransformer(lambda x: (x == 'Success')+0), [col.RESULT_LAST_CAMPAIGN]),
-        # ('bool_binarizer', CategoriesBinarizer('Yes'), [col.HAS_DEFAULT, col.HAS_HOUSING_LOAN, col.HAS_PERSO_LOAN]),
-        # ('marital_binarizer', CategoriesBinarizer('Single'), [col.MARITAL_STATUS]),
-        # ('result_binarizer', CategoriesBinarizer('Success'), [col.RESULT_LAST_CAMPAIGN]),
-        ('indicator_transformer', Binarizer(0), [col.ACCOUNT_BALANCE, col.NB_DAY_LAST_CONTACT]),
-        ('inverse_transformer', FunctionTransformer(lambda x: 1/x), [col.NB_DAY_LAST_CONTACT, col.NB_CONTACT_CURRENT_CAMPAIGN]),
-        ('age_transformer', AgeTransformer, [col.AGE]),
-        ('target_encoder', TargetEncoder(), [col.JOB_TYPE, col.EDUCATION]),
-        ('identity', 'passthrough', [col.NB_CONTACT_CURRENT_CAMPAIGN])],
-        remainder='drop')
-
-    return transformer
-
-def build_pipeline():
-    """ Creates the pipeline including NA imputation and feature engineering """
-    feature_engineering = feature_engineering_transformer()
-
-    pipeline = Pipeline([('imputer', MissingValueTreatment()),
-                        ('feature_engineering', feature_engineering),
-                        ('log_reg_clf', LogisticRegression())])
-
 
     return pipeline
