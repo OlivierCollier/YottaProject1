@@ -61,13 +61,25 @@ class DataBuilder:
             self.data.replace(self.text_translation, inplace=True)
         return self
 
+    
+    def _drop_very_incomplete_rows(self) -> None:
+        """ Drop rows with many missing values (e.g. AGE and JOB_TYPE) """
+        missing_cols = self.config.get('filters').get('missing')
+        if missing_cols:
+            subset_df = self.data.loc[:,missing_cols]
+            subset_bool = subset_df.isna().all(axis=1)
+            missing_idx = subset_bool[subset_bool == True].index
+            self.data = self.data.drop(index=missing_idx)
+        return self
+
 
     def preprocess_data(self) -> pd.DataFrame:
         """ Run preprocess tasks """
         processed_data = self._cast_types() \
                              ._replace_translation() \
                              ._add_merger_field() \
-                             ._drop_columns()
+                             ._drop_columns() \
+                             ._drop_very_incomplete_rows()
 
         return processed_data
 
@@ -136,14 +148,14 @@ if __name__ == '__main__':
                        ALL_CLIENT_DATA_TRANSLATION
                        )
     client_data = client_builder.preprocess_data().data
-    
+
     economic_builder = DataBuilderFactory(ECO_DATA_PATH,
                                       config_eco_data,
                                       'production',
                                       ECO_COLUMNS_TO_DROP)
     economic_data = economic_builder.preprocess_data().data
 
-    # join datasets and merge 
+    #join datasets and merge 
     merged = DataMerger(client_data, economic_data, merge_field=MERGER_FIELD)
     merged.merge_datasets()
-    merged.save(PROCESSED_DATA_PATH)
+    # merged.save(PROCESSED_DATA_PATH)
