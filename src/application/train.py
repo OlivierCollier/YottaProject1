@@ -71,7 +71,7 @@ merged_data_y = merged_data[col.TARGET]
 
 # Load pipeline
 pipeline = Pipeline([('imputer', MissingValueTreatment())
-                        ,('feature_engineering', feature_engineering_transformer())
+                        ,('feature_engineering' ,feature_engineering_transformer())
                         ,('log_reg_clf', LogisticRegression())
                         ])
 
@@ -83,16 +83,17 @@ X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y
 
 
 # Initialize Random search
-# clf = RandomizedSearchCV(estimator=processing_pipeline, param_distributions = base.LOGISTIC_REGRESSION_PARAM, 
-                        # scoring='precision', random_state=base.SEED, cv=5)
+clf = RandomizedSearchCV(estimator=pipeline, param_distributions = base.LOGISTIC_REGRESSION_PARAM, 
+                        scoring='average_precision', random_state=base.SEED, cv=5)
 
 # Fit the model
-pipeline.fit(X_train, y_train)
+clf.fit(X_train, y_train)
 
 
 # Make prediction on test set
 print('Make a prediction on test set')
-y_pred = pipeline.predict(X_test)
+y_pred = clf.predict(X_test)
+print(f'Shape of y_pred is: ', y_pred.shape)
 ipdb.set_trace()
 
 # Save model 
