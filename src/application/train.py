@@ -72,7 +72,7 @@ merged_data = merged.joined_datasets
 merged_data_X = merged_data.drop(columns=col.TARGET)
 merged_data_y = merged_data[col.TARGET]
 
-ipdb.set_trace()
+
 # Load pipeline
 pipeline = Pipeline([('imputer', MissingValueTreatment())
                         ,('feature_engineering' ,feature_engineering_transformer())
