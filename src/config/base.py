@@ -8,7 +8,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 RAW_DATA_DIR = os.path.join(REPO_DIR, 'data/raw/')
 PROCESSED_DATA_DIR = os.path.join(REPO_DIR, 'data/processed/')
-#PREDICTION_DATA_DIR = os.path.join(REPO_DIR, 'data/prediction/')
+PREDICTION_DATA_DIR = os.path.join(REPO_DIR, 'data/predictions/')
 OUTPUTS_DIR = os.path.join(REPO_DIR, 'outputs')
 LOGS_DIR = os.path.join(REPO_DIR, 'logs')
 MODELS_DIR = os.path.join(REPO_DIR, 'models')
@@ -35,6 +35,21 @@ ECO_DATA_SEP = config_data['economic_info']['sep']
 PROCESSED_DATA_NAME = 'processed_data.csv'
 PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
 
+<<<<<<< HEAD
+=======
+PREDICTIONS_FILE_PATH = os.path.join(PREDICTION_DATA_DIR, 'predictions.csv')
+
+# Columns to drop from datasets in EDA mode
+CLIENT_COLUMNS_TO_DROP = [
+    col.LAST_CONTACT_DURATION,
+    col.COMMUNICATION_TYPE
+]
+ECO_COLUMNS_TO_DROP = [
+    col.END_MONTH
+]
+
+
+>>>>>>> :sparkles: Write prediction output to a csv
 # Translation between french and english for column values
 JOB_TYPE_TRANSLATION = {
     'Technicien': 'Technician',

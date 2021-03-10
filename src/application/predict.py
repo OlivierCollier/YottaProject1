@@ -7,6 +7,8 @@ import argparse
 import pickle
 import os
 
+import pandas as pd
+
 import src.config.base as base
 import src.config.column_names as col
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
@@ -66,3 +68,8 @@ pipeline = load_pipeline()
 
 # Make predictions
 y_pred = pipeline.predict(X_pred)
+
+
+# Write predictions
+y_pred = pd.Series(y_pred)
+y_pred.to_csv(base.PREDICTIONS_FILE_PATH)
