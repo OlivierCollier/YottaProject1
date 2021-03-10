@@ -23,8 +23,9 @@ from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 
 
 # Parse arguments
-parser = argparse.ArgumentParser(description='Files containing the training datasets',
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+print('Parsing input arguments...')
+parser = argparse.ArgumentParser(description='Files containing the training datasets', \
+                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--client-data',
                     '-c',
                     help='Provide the client dataset file',
@@ -44,18 +45,22 @@ client_data = client_builder.preprocess_data().data
 eco_builder = DataBuilderFactory(args.eco_file, base.config_eco_data)
 eco_data = eco_builder.preprocess_data().data
 
-# Impute NaN from the eco dataset
-# This step is done outside the pipeline to avoid duplication of NaN after the merge
+
+print('Doing a few preprocessing...')
+# Impute NaN from the socio-eco dataset
+# This step is done outside the pipeline to avoid duplication of Nan after the merge
 eco_data = impute_missing_eco_data(eco_data)
 # Fix wrong entries in client dataset
 client_data = correct_wrong_entries(client_data, base.config_client_data.get('wrong_entries'))
 
 # Merger client and eco datasets
+print('Merging the client and economic datasets together...')
 merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
 merged.merge_datasets()
 merged_data = merged.joined_datasets
 merged_data_X = merged_data.drop(columns=col.TARGET)
 merged_data_y = merged_data[col.TARGET]
+
 
 # Load pipeline
 class_weight = {0: 1, 1: 9}
@@ -65,6 +70,7 @@ pipeline = Pipeline([('imputation', MissingValueTreatment()),
                      ])
 
 # Train-test split
+print('Split train/test')
 merged_data_y = merged_data_y.eq('Yes').astype(int)
 X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y,
                                                     test_size=0.2,
