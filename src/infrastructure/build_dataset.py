@@ -141,5 +141,4 @@ if __name__ == '__main__':
     join = Join(client_data, economic_data)
     join.left_join()
     join.save(PROCESSED_DATA_PATH)
-    ipdb.set_trace()
 
