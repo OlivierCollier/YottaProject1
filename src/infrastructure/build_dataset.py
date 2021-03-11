@@ -83,6 +83,31 @@ class DataBuilder:
 
         return processed_data
 
+    def transform(self, data_type: str) -> pd.DataFrame:
+        """Run preprocess tasks, including imputation, with logs."""
+        print(f'========== Processing {data_type} data ==========')
+        print('- Casting types.')
+        self._cast_types()
+        print('- Translating French words to English.')
+        self._replace_translation()
+        self._add_merger_field()
+        print('- Dropping useless columns.')
+        self._drop_columns()
+        print('- Dropping rows with too many missing values.')
+        self._drop_very_incomplete_rows()
+
+        processed_data = self.data
+
+        if data_type == 'eco':
+            print('- Imputing missing data.')
+            processed_data = impute_missing_eco_data(processed_data)
+        elif data_type == 'client':
+            print('- Correcting erroneous entries.')
+            processed_data = correct_wrong_entries(processed_data,
+                                                   base.config_client_data.get('wrong_entries'))
+
+        return processed_data
+
 
 class DataBuilderCSV(DataBuilder):
     """
@@ -136,6 +161,18 @@ class DataMerger:
     def save(self, out_path: str):
         """ Save the merged dataset """
         self.joined_datasets.to_csv(out_path)
+
+
+    def transform(self):
+        """ Merge datasets with logs """
+
+        print('Merging datasets.')
+        merged_data = self.merge_datasets()
+        print('Separating target from explanatory variables.')
+        X = merged_data.drop(columns=TARGET)
+        y = merged_data[TARGET]
+
+        return X, y
 
 
 if __name__ == '__main__':
