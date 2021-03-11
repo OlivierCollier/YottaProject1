@@ -77,7 +77,7 @@ clf = RandomizedSearchCV(estimator=pipeline,
                          scoring='average_precision',
                          random_state=base.SEED,
                          cv=5)
-
+import ipdb; ipdb.set_trace()
 # Fit the model
 clf.fit(X_train, y_train)
 
