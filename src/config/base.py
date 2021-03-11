@@ -91,8 +91,14 @@ SAVED_MODEL_PATH = os.path.join(MODELS_DIR, 'ml_model.pkl')
 
 # Models parameters grid
 LOGISTIC_REGRESSION_PARAM = {
-    'log_reg_clf__penalty': ['l2'],
-    'log_reg_clf__C': [0.01, 0.1, 1.0],
+    'log_reg_clf__penalty': ['l2', 'l1'],
+    'log_reg_clf__C': [.0001, .001, .01, .01],
     'log_reg_clf__class_weight': ['balanced']
 
 }
+RF_PARAM = {
+    'rf_clf__n_estimators': [220, 240, 260, 280, 300],
+    'rf_clf__max_depth': [6, 7, 8, 9, 10],
+    'rf_clf__min_samples_leaf': [9, 10, 11, 12]
+}
+
