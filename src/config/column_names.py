@@ -2,12 +2,7 @@
     Column names from input files
 """
 
-
 # Client data columns 
-<<<<<<< HEAD
-
-=======
->>>>>>> 6fa20d3799e8318676408cdca92913f0772c6ad2
 LAST_CONTACT_DATE = 'DATE'
 AGE = 'AGE'
 JOB_TYPE = 'JOB_TYPE'

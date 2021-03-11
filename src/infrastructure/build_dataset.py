@@ -134,9 +134,9 @@ class DataMerger:
 
     def _drop_duplicate_columns(self):
         """Drop columns that are present in both datasets"""
-        columns_in_left_dataset = set(self.left_dataset.columns)
-        columns_in_right_dataset = set(self.right_dataset.columns)
-        columns_to_keep_in_right_dataset = list(columns_in_right_dataset - columns_in_left_dataset)\
+        columns_in_left_dataset = list(self.left_dataset.columns)
+        columns_in_right_dataset = list(self.right_dataset.columns)
+        columns_to_keep_in_right_dataset = [column_name if column_name not in columns_in_left_dataset for column_name in columns_in_right_dataset]\
                                            + [col.MERGER_FIELD]
         self.right_dataset = self.right_dataset[columns_to_keep_in_right_dataset]
 
