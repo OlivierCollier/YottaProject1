@@ -1,19 +1,11 @@
 """
     This class is one of the two entry points with predict.py.
-    It is used to train a ML model with some training data.
+    It is used to train our model.
 """
 
-import argparse
-import os
-
-import ipdb
 import pickle
-import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn.metrics import precision_score, average_precision_score, precision_recall_curve
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
 import src.config.base as base
@@ -24,24 +16,26 @@ from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 
 
 def main():
-    # Build datasets
+
+    # Builds datasets.
     print('Building datasets...')
-    client_builder = DataBuilderFactory(base.TRAIN_CLIENT_DATA_PATH, base.config_client_data, base.ALL_CLIENT_DATA_TRANSLATION)
+    client_builder = DataBuilderFactory(base.TRAIN_CLIENT_DATA_PATH,
+                                        base.config_client_data,
+                                        base.ALL_CLIENT_DATA_TRANSLATION)
     client_data = client_builder.preprocess_data().data
 
-    eco_builder = DataBuilderFactory(base.TRAIN_ECO_DATA_PATH, base.config_eco_data)
+    eco_builder = DataBuilderFactory(base.TRAIN_ECO_DATA_PATH,
+                                     base.config_eco_data)
     eco_data = eco_builder.preprocess_data().data
 
-
-    print('Doing a few preprocessing...')
-    # Impute NaN from the socio-eco dataset
-    # This step is done outside the pipeline to avoid duplication of Nan after the merge
+    print('Preprocessing...')
+    # Imputes NaN from the eco dataset.
+    # This step is done outside the pipeline to avoid duplication of NaN while merging.
     eco_data = impute_missing_eco_data(eco_data)
-    # Fix wrong entries in client dataset
+    # Fixes erroneous entries in client dataset.
     client_data = correct_wrong_entries(client_data, base.config_client_data.get('wrong_entries'))
 
-
-    # Merger client and eco datasets
+    # Merges client and eco datasets.
     print('Merging the client and economic datasets together...')
     merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
     merged.merge_datasets()
@@ -49,43 +43,38 @@ def main():
     merged_data_X = merged_data.drop(columns=col.TARGET)
     merged_data_y = merged_data[col.TARGET]
 
-    # Load pipeline
+    # Loads pipeline.
     class_weight = {0: 1, 1: 9}
     pipeline = Pipeline([('imputation', MissingValueTreatment()),
                          ('feature_engineering', feature_engineering_transformer()),
                          ('rf_clf', RandomForestClassifier(class_weight=class_weight))
                          ])
 
-    # Train-test split
-    print('Split train/test')
+    # Splits train and test sets.
+    print('Splitting train and test...')
     merged_data_y = merged_data_y.eq('Yes').astype(int)
     X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y,
                                                         test_size=0.2,
                                                         random_state=base.SEED,
                                                         stratify=merged_data_y)
 
-    # Initialize Random search
-    print('Initialize the Random Search')
+    # Initializes random search.
+    print('Initializing random search...')
     clf = RandomizedSearchCV(estimator=pipeline,
                              param_distributions=base.RF_PARAM,
                              scoring='average_precision',
                              random_state=base.SEED,
                              cv=5)
 
-    # Fit the model
+    # Fits the model.
+    print('Fitting model...')
     clf.fit(X_train, y_train)
 
-
-    # Make prediction on test set
-    print('Make a prediction on test set')
-    y_pred = clf.predict(X_test)
-    print(f'Shape of y_pred is: ', y_pred.shape)
-
-    # Save model 
+    # Saves model.
+    print('Saving model...')
     with open(base.SAVED_MODEL_PATH, 'wb') as file:
         pickle.dump(clf, file)
 
 
 if __name__ == '__main__':
     main()
-    

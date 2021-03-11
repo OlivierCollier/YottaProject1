@@ -1,13 +1,8 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import ipdb
-from scipy.sparse.dia import isspmatrix_dia
-
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import plot_precision_recall_curve, auc, precision_recall_curve
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, Binarizer, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, Binarizer, StandardScaler
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.base import TransformerMixin, BaseEstimator
 from category_encoders.target_encoder import TargetEncoder
@@ -16,8 +11,17 @@ import src.config.column_names as col
 
 
 class ClipTransformer(BaseEstimator, TransformerMixin):
+    """Transforms pandas dataframe by clipping values then scaling columns.
 
-    def __init__(self, a_min, a_max):
+    Attributes
+    ----------
+    a_min: float
+        Lower clip.
+    a_max: float
+        Upper clip.
+    """
+
+    def __init__(self, a_min: float, a_max: float):
         self.a_min = a_min
         self.a_max = a_max
 
@@ -25,36 +29,52 @@ class ClipTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        X_clipped = np.clip(X, self.a_min, self.a_max)
-        X_clipped_scaled = X_clipped / (self.a_max - self.a_min)
-        return X_clipped_scaled
+        data_clipped = np.clip(X, self.a_min, self.a_max)
+        data_clipped_scaled = data_clipped / (self.a_max - self.a_min)
+        return data_clipped_scaled
 
 
 class ExtractCategoryTransformer(BaseEstimator, TransformerMixin):
+    """Transforms into indicator of a given value.
 
-    def __init__(self, category):
-        self.category = category
+    Attributes
+    ----------
+    value: Any
+    """
+
+    def __init__(self, value):
+        self.value = value
 
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
-        X_is_category = X.eq(self.category).astype(int)
-        return X_is_category
+        indicator_is_value = X.eq(self.value).astype(int)
+        return indicator_is_value
 
 
-def AgeTransformer():
+def age_transformer():
+    """Returns transformer to apply to AGE.
 
-    age_transformer = FeatureUnion([
+    Returns
+    -------
+    transformer: sklearn.pipeline.FeatureUnion
+        Transforms AGE using:
+            - indicator that AGE is larger than 25,
+            - indicator that AGE is larger than 60,
+            - scaling with sklearn StandardScaler.
+    """
+
+    transformer = FeatureUnion([
         ('is-not-young-indicator', Binarizer(25)),
         ('is-old-indicator', Binarizer(60)),
         ('scaled', StandardScaler())
     ])
+    return transformer
 
-    return age_transformer
 
-
-class LogicalUnionTransformer(BaseEstimator, TransformerMixin):
+class LogicalOrTransformer(BaseEstimator, TransformerMixin):
+    """Implements logical or for two columns."""
 
     def __init__(self):
         pass
@@ -63,30 +83,33 @@ class LogicalUnionTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        X = X.eq('Yes').astype(int)
-        sum = X.sum(axis=1)
-        prod = X.prod(axis=1)
-        return pd.DataFrame(sum - prod)
+        boolean = X.eq('Yes').astype(int)
+        sum = boolean.sum(axis=1)
+        prod = boolean.prod(axis=1)
+        disjunction = pd.DataFrame(sum - prod)
+        return disjunction
 
 
 class DateTransformer(BaseEstimator, TransformerMixin):
+    """Transforms DATE using target encoding of MONTH."""
 
     def __init__(self):
-        self.y = None
+        self.encoder = None
 
     def fit(self, X, y=None):
         self.encoder = TargetEncoder().fit(X, y)
         return self
 
-    def transform(self, X):
+    ############
+    def transform(self, X, y=None):
         month = X.apply(lambda x: x.apply(lambda y: str(y.month)))
         target_encoded_month = self.encoder.transform(month)
         return target_encoded_month
-
+    ############
 
 class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
 
-    def __init__(self, value_to_replace, n_bins):
+    def __init__(self, value_to_replace, n_bins: int):
         self.value_to_replace = value_to_replace
         self.n_bins = n_bins
         self.X = None
@@ -119,21 +142,20 @@ def feature_engineering_transformer():
                                 col.HAS_HOUSING_LOAN,
                                 col.HAS_PERSO_LOAN,
                                 col.HAS_DEFAULT]
-                                #col.RESULT_LAST_CAMPAIGN]
     eco_features = [col.EMPLOYMENT_VARIATION_RATE, col.IDX_CONSUMER_PRICE, col.IDX_CONSUMER_CONFIDENCE]
 
     feature_eng_transformer = ColumnTransformer([
         ('balance-clipper', ClipTransformer(a_min=-4000, a_max=4000), [col.ACCOUNT_BALANCE]),
         ('nb-clipper', ClipTransformer(a_min=0, a_max=15), [col.NB_CONTACTS_CURRENT_CAMPAIGN, col.NB_CONTACTS_BEFORE_CAMPAIGN]),
         ('one-hot-encoder', OneHotEncoder(drop='first'), one_hot_encoded_features),
-        ('category-retired-extracter', ExtractCategoryTransformer('Retired'), [col.JOB_TYPE]),
-        ('category-success-extracter', ExtractCategoryTransformer('Success'), [col.RESULT_LAST_CAMPAIGN]),
-        ('category-single-extracter', ExtractCategoryTransformer('Single'), [col.MARITAL_STATUS]),
-        ('age-transformer', AgeTransformer(), [col.AGE]),
+        ('category-retired-extractor', ExtractCategoryTransformer('Retired'), [col.JOB_TYPE]),
+        ('category-success-extractor', ExtractCategoryTransformer('Success'), [col.RESULT_LAST_CAMPAIGN]),
+        ('category-single-extractor', ExtractCategoryTransformer('Single'), [col.MARITAL_STATUS]),
+        ('age-transformer', age_transformer(), [col.AGE]),
         ('date-transformer', DateTransformer(), [col.LAST_CONTACT_DATE]),
-        ('sum-transformer', LogicalUnionTransformer(), [col.HAS_PERSO_LOAN, col.HAS_HOUSING_LOAN]),
+        ('disjunction-transformer', LogicalOrTransformer(), [col.HAS_PERSO_LOAN, col.HAS_HOUSING_LOAN]),
         # ('nb-days-last-contact-transformer', NbDaysLastContactTransformer(-1, 4), [col.NB_DAYS_LAST_CONTACT])
-        ('identity', StandardScaler(), eco_features)
+        ('scaler', StandardScaler(), eco_features)
     ])
 
     return feature_eng_transformer
