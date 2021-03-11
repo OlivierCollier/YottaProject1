@@ -1,28 +1,22 @@
 import os
 from dataclasses import dataclass
 
-import ipdb
 import pandas as pd
-from src.config.base import *
-from src.config.column_names import *
+
+from src.domain.cleaning import impute_missing_eco_data, correct_wrong_entries
+import src.config.base as base
+import src.config.column_names as col
 
 
-BUILD_MODES = ['production', 'eda']
+# Global variables
+MERGING_METHODS = ['left', 'right', 'outer', 'inner', 'cross']
 
 
 class DataBuilder:
 
-    def __init__(self, path: str, date_column_name: str, date_format: str, sep: str,\
-        config: dict, build_mode: str, cols_to_drop: list = None, text_translation: dict = None):
+    def __init__(self, path: str, config: dict, text_translation: dict = None):
         self.path = path
-        self.date_column_name = date_column_name
-        self.date_format = date_format
-        self.sep = sep
         self.config = config
-        if build_mode not in BUILD_MODES:
-            raise ValueError(f'Build mode should be one of {BUILD_MODES}')
-        self.build_mode = build_mode
-        self.cols_to_drop = cols_to_drop
         self.text_translation = text_translation
         self.data = self.read()
 
@@ -32,42 +26,62 @@ class DataBuilder:
 
 
     def _add_merger_field(self) -> None:
-        """ Reformat date field to have unique merge field for the join """
-        self.data[MERGER_FIELD] = self.data[self.date_column_name].dt.strftime('%Y-%m')
+        """Reformat date field to have unique merge field for the join"""
+        self.data[col.MERGER_FIELD] = self.data[self.config.get('date_column')].dt.strftime('%Y-%m')
         return self
 
 
     def _cast_types(self) -> None:
-        """ Cast columns to adequate types"""
+        """Cast columns to adequate types"""
         mapping_cols_types = self.config.get('cast_types')
         self.data = self.data.astype(mapping_cols_types)
         return self
 
-
-    def _drop_columns(self) -> None:
-        """ 
-        Drop columns specified in column_names.py only in 'production' build mode
-        because we cannot use them. 
-        In 'eda' mode, we want to keep them for the plots and explanations.
-        """
-        if self.build_mode == 'production':
-            self.data.drop(columns=self.cols_to_drop, inplace=True)
-        return self
-
-
     def _replace_translation(self) -> None:
-        """ Replace text translation from french into english """
+        """Replace text translation from french into english"""
         if self.text_translation:
             self.data.replace(self.text_translation, inplace=True)
         return self
-
+    
+    def _drop_very_incomplete_rows(self) -> None:
+        """Drop rows with many missing values (e.g. AGE and JOB_TYPE)"""
+        missing_cols = self.config.get('filters').get('missing')
+        if missing_cols:
+            subset_df = self.data.loc[:, missing_cols]
+            subset_bool = subset_df.isna().all(axis=1)
+            missing_idx = subset_bool[subset_bool].index
+            self.data = self.data.drop(index=missing_idx)
+        return self
 
     def preprocess_data(self) -> pd.DataFrame:
-        """ Run preprocess tasks """
-        processed_data = self._cast_types() \
-                             ._drop_columns() \
-                             ._replace_translation() \
-                             ._add_merger_field()
+        """Run preprocess tasks"""
+        processed_data = self._cast_types()\
+            ._replace_translation()\
+            ._add_merger_field()\
+            ._drop_very_incomplete_rows()
+
+        return processed_data
+
+    def transform(self, data_type: str) -> pd.DataFrame:
+        """Run preprocess tasks, including imputation, with logs"""
+        print(f'========== Processing {data_type} data ==========')
+        print('- Casting types.')
+        self._cast_types()
+        print('- Translating French words to English.')
+        self._replace_translation()
+        self._add_merger_field()
+        print('- Dropping rows with too many missing values.')
+        self._drop_very_incomplete_rows()
+
+        processed_data = self.data
+
+        if data_type == 'eco':
+            print('- Imputing missing data.')
+            processed_data = impute_missing_eco_data(processed_data)
+        elif data_type == 'client':
+            print('- Correcting erroneous entries.')
+            processed_data = correct_wrong_entries(processed_data,
+                                                   base.config_client_data.get('wrong_entries'))
 
         return processed_data
 
@@ -77,7 +91,7 @@ class DataBuilderCSV(DataBuilder):
     Data loader class for csv format
     """
     def read(self) -> pd.DataFrame:
-        data = pd.read_csv(self.path, sep=self.sep)
+        data = pd.read_csv(self.path, sep=self.config.get('sep'))
         return data
 
 
@@ -90,55 +104,71 @@ class DataBuilderFactory:
     and if statement in this class
     """
 
-    def __new__(cls, path: str, date_column_name: str, date_format: str, sep: str, \
-        config: dict, build_mode: str, cols_to_drop: list, text_translation: dict = None):
+    def __new__(cls, path: str, config: dict, text_translation: dict = None):
         if path.endswith('.csv'):
-            return DataBuilderCSV(path, date_column_name, date_format, sep, \
-                config, build_mode, cols_to_drop, text_translation)
+            return DataBuilderCSV(path, config, text_translation)
         else:
             raise ValueError('Unsupported data format.')
     
 
-@dataclass
-class Join:
-    client_data_left: pd.DataFrame
-    economic_data_right: pd.DataFrame
-    joined_data = None
+class DataMerger:
+    """
+        Class to merge two datasets together
+    """
 
-    def left_join(self) -> pd.DataFrame:
-        self.joined_data = self.client_data_left.merge(self.economic_data_right, how='left', on=MERGER_FIELD)
-        self.joined_data.drop([MERGER_FIELD], axis=1, inplace=True)
-        #return joined_data
+    def __init__(self, left_dataset: pd.DataFrame, right_dataset: pd.DataFrame,
+                 merge_field: str, how: str = 'left') -> None:
+        self.left_dataset = left_dataset
+        self.right_dataset = right_dataset
+        self.merge_field = merge_field
+        if how not in MERGING_METHODS:
+            raise ValueError(f'How argument must be in {MERGING_METHODS}')
+        self.how = how
+        self.joined_datasets = None
+
+    def merge_datasets(self):
+        """Merge both datasets"""
+        self._drop_duplicate_columns()
+        self.joined_datasets = self.left_dataset.merge(self.right_dataset, how=self.how, on=self.merge_field)
+        self.joined_datasets.drop([col.MERGER_FIELD], axis=1, inplace=True)
+
+    def _drop_duplicate_columns(self):
+        """Drop columns that are present in both datasets"""
+        columns_in_left_dataset = list(self.left_dataset.columns)
+        columns_in_right_dataset = list(self.right_dataset.columns)
+        columns_to_keep_in_right_dataset = [column_name for column_name in columns_in_right_dataset if column_name not in columns_in_left_dataset]\
+                                           + [col.MERGER_FIELD]
+        self.right_dataset = self.right_dataset[columns_to_keep_in_right_dataset]
 
     def save(self, out_path: str):
-        self.joined_data.to_csv(out_path)
+        """Save the merged dataset"""
+        self.joined_datasets.to_csv(out_path)
+
+    def transform(self):
+        """Merge datasets with logs"""
+        print('========== Merging datasets ==========')
+        self.merge_datasets()
+        merged_data = self.joined_datasets
+        print('========== Separating target from explanatory variables ==========')
+        X = merged_data.drop(columns=col.TARGET)
+        y = merged_data[col.TARGET]
+        return X, y
 
 
 if __name__ == '__main__':
 
     # read and clean both datasets
-    client_builder = DataBuilderFactory(DATA_PATH,
-                       LAST_CONTACT_DATE,
-                       DATA_DATE_FORMAT,
-                       DATA_SEP,
-                       config_client_data,
-                       'production',
-                       CLIENT_COLUMNS_TO_DROP,
-                       ALL_CLIENT_DATA_TRANSLATION
-                       )
+    client_builder = DataBuilderFactory(base.DATA_PATH,
+                                        base.config_client_data,
+                                        base.ALL_CLIENT_DATA_TRANSLATION)
     client_data = client_builder.preprocess_data().data
-    
-    economic_builder = DataBuilderFactory(ECO_DATA_PATH,
-                                      END_MONTH,
-                                      ECO_DATA_DATE_FORMAT,
-                                      ECO_DATA_SEP,
-                                      config_eco_data,
-                                      'production',
-                                      ECO_COLUMNS_TO_DROP)
+
+    economic_builder = DataBuilderFactory(base.ECO_DATA_PATH,
+                                          base.config_eco_data)
     economic_data = economic_builder.preprocess_data().data
 
-    # join datasets and merge 
-    join = Join(client_data, economic_data)
-    join.left_join()
-    join.save(PROCESSED_DATA_PATH)
+    # join datasets and merge
+    merged = DataMerger(client_data, economic_data, merge_field=col.MERGER_FIELD)
+    merged.merge_datasets()
+    merged.save(base.PROCESSED_DATA_PATH)
 

@@ -1,9 +1,11 @@
 
+from inspect import indentsize
+import ipdb
 import numpy as np
 import pandas as pd
+import src.config.column_names as col
+import src.config.base as base
 from sklearn.base import BaseEstimator, TransformerMixin
-
-import src.config.columns_names as col
 
 
 def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:
@@ -35,7 +37,10 @@ def correct_wrong_entries(data: pd.DataFrame, corrections: dict) -> pd.DataFrame
 	-------
 	corrected_data: pd.DataFrame
 	"""
-	corrected_data = data.replace(corrections)
+	to_replace = {k: {v: np.nan} for k, v in corrections.items()}
+
+	corrected_data = data.replace(to_replace)
+	
 	return corrected_data
 
 
@@ -61,20 +66,47 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 
 	"""
 
-	def __init__(self, categorical_variables: list, continuous_variables: list):
+	def __init__(self):
 		self.data = None
-		self.categorical_variables = categorical_variables
-		self.continuous_variables = continuous_variables
+		self.y = None
+		self.categorical_variables = None
+		self.continuous_variables = None
 
-	def fit(self, data: pd.DataFrame):
+
+	def fit(self, data: pd.DataFrame, y):
 		self.data = data
+		# self.y = y
+		cat_variables = data.select_dtypes(include='object').columns.tolist()
+		cat_variables.remove(col.JOB_TYPE)
+		self.categorical_variables = cat_variables
+		
+		self.continuous_variables = data.select_dtypes(include='number').columns.tolist()
+
 		return self
 
-	def transform(self, data: pd.DataFrame) -> pd.DataFrame:
+
+	def transform(self, data: pd.DataFrame, y=None) -> pd.DataFrame:
 		"""Imputes missing values using JOB_TYPE then removes remaining ones."""
+		self.data = data
+		self._impute_job_type()
 		self._impute_from_job_type()
-		self._remove_remaining_rows_with_missing_values()
 		return self.data
+
+
+	def _impute_job_type(self):
+		"""Imputes missing values of JOB_TYPE column given AGE value"""
+		def _age_imputation(age):
+			if age < 25:
+				return base.JOB_TYPE_TRANSLATION.get('Etudiant')
+			elif age > 60:
+				return base.JOB_TYPE_TRANSLATION.get('Retraité')
+			else:
+				return self.data['JOB_TYPE'].mode()[0]
+		
+		self.data.loc[pd.isna(self.data[col.JOB_TYPE]),col.JOB_TYPE] = \
+			self.data.loc[pd.isna(self.data[col.JOB_TYPE]),col.AGE].map(lambda x: _age_imputation(x))
+		return self
+
 
 	def _impute_from_job_type(self):
 		"""Imputes missing values using JOB_TYPE."""
@@ -85,6 +117,7 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 			method = (lambda x: x.median())
 			self._impute_single_column_from_job_type(column_name, method)
 		return self
+
 
 	def _impute_single_column_from_job_type(self, column_name: str, method):
 		"""Imputes missing values for a single variable using JOB_TYPE."""
@@ -98,41 +131,4 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 			corresponding_job_types.replace(replacements[column_name])
 		return self
 
-	def _remove_remaining_rows_with_missing_values(self):
-		"""Removes remaining observations with missing values."""
-		self.data.dropna(inplace=True)
-		return self
 
-
-class OutlierTreatment(BaseEstimator, TransformerMixin):
-	"""Data transformations to deal with outliers.
-
-	Attributes
-	----------
-	data: pd.DataFrame
-	column_names: list
-
-	Methods
-	-------
-	fit(data)
-	transform(data)
-	"""
-
-	def __init__(self, column_names: list):
-		self.data = None
-		self.column_names = column_names
-
-	def fit(self, data: pd.DataFrame):
-		self.data = data
-		return self
-
-	def transform(self, data: pd.DataFrame, upper_clips: dict) -> pd.DataFrame:
-		"""Deal with outliers for given columns."""
-		self._clip(upper_clips)
-		return self.data
-
-	def _clip(self, upper_clips: dict):
-		"""Clips outliers."""
-		for column_name in self.column_names:
-			self.data[column_name] = np.clip(self.data[column_name], a_min=0, a_max=upper_clips[column_name])
-		return self
