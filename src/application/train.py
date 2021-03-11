@@ -22,22 +22,6 @@ from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data, 
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 
 
-# # Parse arguments
-# print('Parsing input arguments...')
-# parser = argparse.ArgumentParser(description='Files containing the training datasets', \
-#                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-# parser.add_argument('--client-data',
-#                 '-c', 
-#                 help='Provide the client dataset file',
-#                 dest='client_file')
-# parser.add_argument('--eco-data',
-#                 '-e',
-#                 help='Provide the economic information dataset file',
-#                 dest='eco_file')
-
-# args = parser.parse_args()
-
-
 def main():
     # Build datasets
     print('Building datasets...')
