@@ -23,27 +23,25 @@ from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 
 
 # Parse arguments
-parser = argparse.ArgumentParser(description='Files containing the training datasets', \
-                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Files containing the training datasets',
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--client-data',
-                '-c', 
-                help='Provide the client dataset file',
-                default=os.path.join(base.RAW_DATA_DIR, base.CLIENT_DATA_FILE_NAME),
-                dest='client_file')
+                    '-c',
+                    help='Provide the client dataset file',
+                    default=os.path.join(base.RAW_DATA_DIR, base.CLIENT_DATA_FILE_NAME),
+                    dest='client_file')
 parser.add_argument('--eco-data',
-                '-e',
-                help='Provide the economic information dataset file',
-                default=os.path.join(base.RAW_DATA_DIR, base.ECO_DATA_FILE_NAME),
-                dest='eco_file')
+                    '-e',
+                    help='Provide the economic information dataset file',
+                    default=os.path.join(base.RAW_DATA_DIR, base.ECO_DATA_FILE_NAME),
+                    dest='eco_file')
 args = parser.parse_args()
 
 # Build datasets
-client_builder = DataBuilderFactory(args.client_file, base.config_client_data, 'production', \
-                                base.CLIENT_COLUMNS_TO_DROP, base.ALL_CLIENT_DATA_TRANSLATION)
+client_builder = DataBuilderFactory(args.client_file, base.config_client_data, base.ALL_CLIENT_DATA_TRANSLATION)
 client_data = client_builder.preprocess_data().data
 
-eco_builder = DataBuilderFactory(args.eco_file, base.config_eco_data, 'production', \
-                            base.ECO_COLUMNS_TO_DROP)
+eco_builder = DataBuilderFactory(args.eco_file, base.config_eco_data)
 eco_data = eco_builder.preprocess_data().data
 
 # Impute NaN from the eco dataset
@@ -61,7 +59,7 @@ merged_data_y = merged_data[col.TARGET]
 
 # Load pipeline
 class_weight = {0: 1, 1: 9}
-pipeline = Pipeline([('imputer', MissingValueTreatment()),
+pipeline = Pipeline([('imputation', MissingValueTreatment()),
                      ('feature_engineering', feature_engineering_transformer()),
                      ('rf_clf', RandomForestClassifier(class_weight=class_weight))
                      ])

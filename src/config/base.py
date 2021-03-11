@@ -19,7 +19,6 @@ CONFIG_DIR = os.path.join(REPO_DIR, 'src/config')
 CLIENT_DATA_FILE_NAME = 'data.csv'
 ECO_DATA_FILE_NAME = 'socio_eco.csv'
 
-
 # Config file
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.yml')
 
@@ -35,17 +34,6 @@ ECO_DATA_SEP = config_data['economic_info']['sep']
 
 PROCESSED_DATA_NAME = 'processed_data.csv'
 PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
-
-
-# Columns to drop from datasets in EDA mode
-CLIENT_COLUMNS_TO_DROP = [
-    col.LAST_CONTACT_DURATION,
-    col.COMMUNICATION_TYPE
-]
-ECO_COLUMNS_TO_DROP = [
-    col.END_MONTH
-]
-
 
 # Translation between french and english for column values
 JOB_TYPE_TRANSLATION = {
@@ -80,14 +68,11 @@ ALL_CLIENT_DATA_TRANSLATION = {
     col.RESULT_LAST_CAMPAIGN: RESULT_LAST_CAMPAIGN_TRANSLATION
 }
 
-
 # Initialize random seed
 SEED=21
 
-
 # Path to model saved
 SAVED_MODEL_PATH = os.path.join(MODELS_DIR, 'ml_model.pkl')
-
 
 # Models parameters grid
 LOGISTIC_REGRESSION_PARAM = {
