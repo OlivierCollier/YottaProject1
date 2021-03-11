@@ -8,10 +8,12 @@ import pickle
 import os
 
 import pandas as pd
+import ipdb
 
 import src.config.base as base
 import src.config.column_names as col
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
+from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data
 
 
 def load_pipeline():
@@ -29,14 +31,18 @@ def load_pipeline():
 def main():
     # Build datasets
     print('Building datasets...')
-    client_builder = DataBuilderFactory(base.PREDICT_CLIENT_DATA_PATH, base.config_client_data, 'production', \
-                                    base.CLIENT_COLUMNS_TO_DROP, base.ALL_CLIENT_DATA_TRANSLATION)
+    client_builder = DataBuilderFactory(base.PREDICT_CLIENT_DATA_PATH, base.config_client_data, base.ALL_CLIENT_DATA_TRANSLATION)
     client_data = client_builder.preprocess_data().data
 
-    eco_builder = DataBuilderFactory(base.PREDICT_ECO_DATA_PATH, base.config_eco_data, 'production', \
-                                base.ECO_COLUMNS_TO_DROP)
+    eco_builder = DataBuilderFactory(base.PREDICT_ECO_DATA_PATH, base.config_eco_data)
     eco_data = eco_builder.preprocess_data().data
 
+    print('Doing a few preprocessing...')
+    # Impute NaN from the socio-eco dataset
+    # This step is done outside the pipeline to avoid duplication of Nan after the merge
+    eco_data = impute_missing_eco_data(eco_data)
+    # Fix wrong entries in client dataset
+    client_data = correct_wrong_entries(client_data, base.config_client_data.get('wrong_entries'))
 
     # Merger client and eco datasets
     print('Merging the client and economic datasets together...')
@@ -50,7 +56,7 @@ def main():
     # Load pipeline
     pipeline = load_pipeline()
 
-
+    ipdb.set_trace()
     # Make predictions
     y_pred = pipeline.predict(X_pred)
 

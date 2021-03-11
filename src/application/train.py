@@ -6,6 +6,7 @@
 import argparse
 import os
 
+import ipdb
 import pickle
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -25,12 +26,10 @@ from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 def main():
     # Build datasets
     print('Building datasets...')
-    client_builder = DataBuilderFactory(base.TRAIN_CLIENT_DATA_PATH, base.config_client_data, 'production', \
-                                    base.CLIENT_COLUMNS_TO_DROP, base.ALL_CLIENT_DATA_TRANSLATION)
+    client_builder = DataBuilderFactory(base.TRAIN_CLIENT_DATA_PATH, base.config_client_data, base.ALL_CLIENT_DATA_TRANSLATION)
     client_data = client_builder.preprocess_data().data
 
-    eco_builder = DataBuilderFactory(base.TRAIN_ECO_DATA_PATH, base.config_eco_data, 'production', \
-                                base.ECO_COLUMNS_TO_DROP)
+    eco_builder = DataBuilderFactory(base.TRAIN_ECO_DATA_PATH, base.config_eco_data)
     eco_data = eco_builder.preprocess_data().data
 
 
@@ -64,7 +63,7 @@ def main():
                                                         test_size=0.2,
                                                         random_state=base.SEED,
                                                         stratify=merged_data_y)
-
+    ipdb.set_trace()
     # Initialize Random search
     print('Initialize the Random Search')
     clf = RandomizedSearchCV(estimator=pipeline,
