@@ -20,8 +20,6 @@ CONFIG_DIR = os.path.join(REPO_DIR, 'src/config')
 # Datasets files
 CLIENT_DATA_FILE_NAME = 'data.csv'
 ECO_DATA_FILE_NAME = 'socio_eco.csv'
-<<<<<<< HEAD
-=======
 
 # Train datasets full paths
 TRAIN_CLIENT_DATA_PATH = os.path.join(TRAIN_DATA_DIR, CLIENT_DATA_FILE_NAME)
@@ -30,19 +28,7 @@ TRAIN_ECO_DATA_PATH = os.path.join(TRAIN_DATA_DIR, ECO_DATA_FILE_NAME)
 # Predict datasets full paths
 PREDICT_CLIENT_DATA_PATH = os.path.join(PREDICT_DATA_DIR, CLIENT_DATA_FILE_NAME)
 PREDICT_ECO_DATA_PATH = os.path.join(PREDICT_DATA_DIR, ECO_DATA_FILE_NAME)
->>>>>>> 6fa20d3799e8318676408cdca92913f0772c6ad2
 
-<<<<<<< HEAD
-=======
-# Train datasets full paths
-TRAIN_CLIENT_DATA_PATH = os.path.join(TRAIN_DATA_DIR, CLIENT_DATA_FILE_NAME)
-TRAIN_ECO_DATA_PATH = os.path.join(TRAIN_DATA_DIR, ECO_DATA_FILE_NAME)
-
-# Predict datasets full paths
-PREDICT_CLIENT_DATA_PATH = os.path.join(PREDICT_DATA_DIR, CLIENT_DATA_FILE_NAME)
-PREDICT_ECO_DATA_PATH = os.path.join(PREDICT_DATA_DIR, ECO_DATA_FILE_NAME)
-
->>>>>>> :memo: Add README instructions for the train/predict
 # Config file
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.yml')
 
@@ -59,25 +45,8 @@ ECO_DATA_SEP = config_data['economic_info']['sep']
 PROCESSED_DATA_NAME = 'processed_data.csv'
 PROCESSED_DATA_PATH = os.path.join(PROCESSED_DATA_DIR,PROCESSED_DATA_NAME)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 PREDICTIONS_FILE_PATH = os.path.join(PREDICTION_DATA_DIR, 'predictions.csv')
 
-# Columns to drop from datasets in EDA mode
-CLIENT_COLUMNS_TO_DROP = [
-    col.LAST_CONTACT_DURATION,
-    col.COMMUNICATION_TYPE
-]
-ECO_COLUMNS_TO_DROP = [
-    col.END_MONTH
-]
-
-=======
-PREDICTIONS_FILE_PATH = os.path.join(PREDICTION_DATA_DIR, 'predictions.csv')
->>>>>>> 6fa20d3799e8318676408cdca92913f0772c6ad2
-
->>>>>>> :sparkles: Write prediction output to a csv
 # Translation between french and english for column values
 JOB_TYPE_TRANSLATION = {
     'Technicien': 'Technician',
