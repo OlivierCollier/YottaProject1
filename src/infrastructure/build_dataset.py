@@ -171,7 +171,11 @@ if __name__ == '__main__':
     merged = DataMerger(client_data, economic_data, merge_field=col.MERGER_FIELD)
     merged.merge_datasets()
 <<<<<<< HEAD
+<<<<<<< HEAD
     merged.save(base.PROCESSED_DATA_PATH)
 =======
     merged.save(PROCESSED_DATA_PATH)
 >>>>>>> :memo: Add README instructions for the train/predict
+=======
+    merged.save(base.PROCESSED_DATA_PATH)
+>>>>>>> 6fa20d3799e8318676408cdca92913f0772c6ad2

@@ -50,25 +50,28 @@ def main():
     merged_data_X = merged_data.drop(columns=col.TARGET)
     merged_data_y = merged_data[col.TARGET]
 
-
     # Load pipeline
-    pipeline = Pipeline([('imputer', MissingValueTreatment())
-                            ,('feature_engineering' ,feature_engineering_transformer())
-                            ,('log_reg_clf', LogisticRegression())
-                            ])
-
+    class_weight = {0: 1, 1: 9}
+    pipeline = Pipeline([('imputation', MissingValueTreatment()),
+                         ('feature_engineering', feature_engineering_transformer()),
+                         ('rf_clf', RandomForestClassifier(class_weight=class_weight))
+                         ])
 
     # Train-test split
     print('Split train/test')
     merged_data_y = merged_data_y.eq('Yes').astype(int)
-    X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y, 
-                                            test_size=0.2, random_state=base.SEED)
-
+    X_train, X_test, y_train, y_test = train_test_split(merged_data_X, merged_data_y,
+                                                        test_size=0.2,
+                                                        random_state=base.SEED,
+                                                        stratify=merged_data_y)
 
     # Initialize Random search
     print('Initialize the Random Search')
-    clf = RandomizedSearchCV(estimator=pipeline, param_distributions = base.LOGISTIC_REGRESSION_PARAM, 
-                            scoring='average_precision', random_state=base.SEED, cv=5)
+    clf = RandomizedSearchCV(estimator=pipeline,
+                             param_distributions=base.RF_PARAM,
+                             scoring='average_precision',
+                             random_state=base.SEED,
+                             cv=5)
 
     # Fit the model
     clf.fit(X_train, y_train)
