@@ -1,8 +1,9 @@
 import os
 from dataclasses import dataclass
 
-import ipdb
 import pandas as pd
+
+from src.domain.cleaning import impute_missing_eco_data, correct_wrong_entries
 import src.config.base as base
 import src.config.column_names as col
 
@@ -13,11 +14,9 @@ MERGING_METHODS = ['left', 'right', 'outer', 'inner', 'cross']
 
 class DataBuilder:
 
-    def __init__(self, path: str, config: dict,
-                 cols_to_drop: list = None, text_translation: dict = None):
+    def __init__(self, path: str, config: dict, text_translation: dict = None):
         self.path = path
         self.config = config
-        self.cols_to_drop = cols_to_drop
         self.text_translation = text_translation
         self.data = self.read()
 
@@ -129,7 +128,6 @@ class DataMerger:
 
     def merge_datasets(self):
         """Merge both datasets"""
-        #import ipdb; ipdb.set_trace()
         self._drop_duplicate_columns()
         self.joined_datasets = self.left_dataset.merge(self.right_dataset, how=self.how, on=self.merge_field)
         self.joined_datasets.drop([col.MERGER_FIELD], axis=1, inplace=True)
@@ -148,13 +146,12 @@ class DataMerger:
 
     def transform(self):
         """Merge datasets with logs"""
-
-        print('Merging datasets.')
+        print('========== Merging datasets ==========')
+        self.merge_datasets()
         merged_data = self.joined_datasets
-        print('Separating target from explanatory variables.')
+        print('========== Separating target from explanatory variables ==========')
         X = merged_data.drop(columns=col.TARGET)
         y = merged_data[col.TARGET]
-
         return X, y
 
 
