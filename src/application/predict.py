@@ -26,50 +26,54 @@ def load_pipeline():
     return pipeline
 
 
-# Parse arguments
-print('Parsing input arguments...')
-parser = argparse.ArgumentParser(description='Files containing the test datasets', \
-                                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--client-data',
-                '-c', 
-                help='Provide the client dataset file',
-                dest='client_file')
-parser.add_argument('--eco-data',
-                '-e',
-                help='Provide the economic information dataset file',
-                dest='eco_file')
+# # Parse arguments
+# print('Parsing input arguments...')
+# parser = argparse.ArgumentParser(description='Files containing the test datasets', \
+#                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+# parser.add_argument('--client-data',
+#                 '-c', 
+#                 help='Provide the client dataset file',
+#                 dest='client_file')
+# parser.add_argument('--eco-data',
+#                 '-e',
+#                 help='Provide the economic information dataset file',
+#                 dest='eco_file')
 
-args = parser.parse_args()
+# args = parser.parse_args()
 
+def main():
+    # Build datasets
+    print('Building datasets...')
+    client_builder = DataBuilderFactory(base.PREDICT_CLIENT_DATA_PATH, base.config_client_data, 'production', \
+                                    base.CLIENT_COLUMNS_TO_DROP, base.ALL_CLIENT_DATA_TRANSLATION)
+    client_data = client_builder.preprocess_data().data
 
-# Build datasets
-print('Building datasets...')
-client_builder = DataBuilderFactory(args.client_file, base.config_client_data, 'production', \
-                                base.CLIENT_COLUMNS_TO_DROP, base.ALL_CLIENT_DATA_TRANSLATION)
-client_data = client_builder.preprocess_data().data
-
-eco_builder = DataBuilderFactory(args.eco_file, base.config_eco_data, 'production', \
-                            base.ECO_COLUMNS_TO_DROP)
-eco_data = eco_builder.preprocess_data().data
-
-
-# Merger client and eco datasets
-print('Merging the client and economic datasets together...')
-merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
-merged.merge_datasets()
-X_pred = merged.joined_datasets
-if col.TARGET in X_pred.columns:
-    X_pred.drop(col.TARGET, axis= 1, inplace=True)
+    eco_builder = DataBuilderFactory(base.PREDICT_ECO_DATA_PATH, base.config_eco_data, 'production', \
+                                base.ECO_COLUMNS_TO_DROP)
+    eco_data = eco_builder.preprocess_data().data
 
 
-# Load pipeline
-pipeline = load_pipeline()
+    # Merger client and eco datasets
+    print('Merging the client and economic datasets together...')
+    merged = DataMerger(client_data, eco_data, col.MERGER_FIELD)
+    merged.merge_datasets()
+    X_pred = merged.joined_datasets
+    if col.TARGET in X_pred.columns:
+        X_pred.drop(col.TARGET, axis= 1, inplace=True)
 
 
-# Make predictions
-y_pred = pipeline.predict(X_pred)
+    # Load pipeline
+    pipeline = load_pipeline()
 
 
-# Write predictions
-y_pred = pd.Series(y_pred)
-y_pred.to_csv(base.PREDICTIONS_FILE_PATH)
+    # Make predictions
+    y_pred = pipeline.predict(X_pred)
+
+
+    # Write predictions
+    y_pred = pd.Series(y_pred)
+    y_pred.to_csv(base.PREDICTIONS_FILE_PATH)
+
+
+if __name__ == '__main__':
+    main()

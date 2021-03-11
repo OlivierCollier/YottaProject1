@@ -158,4 +158,4 @@ if __name__ == '__main__':
     #join datasets and merge 
     merged = DataMerger(client_data, economic_data, merge_field=MERGER_FIELD)
     merged.merge_datasets()
-    # merged.save(PROCESSED_DATA_PATH)
+    merged.save(PROCESSED_DATA_PATH)

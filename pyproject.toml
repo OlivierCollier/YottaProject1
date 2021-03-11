@@ -1,8 +1,13 @@
 [tool.poetry]
 name = "productsubscription-oc-jk"
 version = "0.1.0"
-description = "Yotta project 1"
-authors = ["Jérémie Koster & Olivier Collier"]
+description = "Yotta project 1 - product subscription"
+authors = ["Jérémie Koster <jeremie.koster@gmail.com>",
+    "Olivier Collier <oliviercollier8@gmail.com>"]
+repository = "https://gitlab.com/yotta-academy/mle-bootcamp/projects/ml-project/winter-2021/productsubscription-oc-jk"
+packages = [
+    {include = "src"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -20,3 +25,7 @@ category-encoders = "^2.2.2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+train = "src.application.train:main"
+predict = "src.application.predict:main"
