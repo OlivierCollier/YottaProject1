@@ -63,7 +63,7 @@ def main():
                                                         test_size=0.2,
                                                         random_state=base.SEED,
                                                         stratify=merged_data_y)
-    ipdb.set_trace()
+
     # Initialize Random search
     print('Initialize the Random Search')
     clf = RandomizedSearchCV(estimator=pipeline,
