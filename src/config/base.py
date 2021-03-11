@@ -9,6 +9,8 @@ REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 RAW_DATA_DIR = os.path.join(REPO_DIR, 'data/raw/')
 PROCESSED_DATA_DIR = os.path.join(REPO_DIR, 'data/processed/')
 PREDICTION_DATA_DIR = os.path.join(REPO_DIR, 'data/predictions/')
+TRAIN_DATA_DIR = os.path.join(RAW_DATA_DIR, 'train/')
+PREDICT_DATA_DIR = os.path.join(RAW_DATA_DIR, 'predict/')
 OUTPUTS_DIR = os.path.join(REPO_DIR, 'outputs')
 LOGS_DIR = os.path.join(REPO_DIR, 'logs')
 MODELS_DIR = os.path.join(REPO_DIR, 'models')
@@ -19,15 +21,26 @@ CONFIG_DIR = os.path.join(REPO_DIR, 'src/config')
 CLIENT_DATA_FILE_NAME = 'data.csv'
 ECO_DATA_FILE_NAME = 'socio_eco.csv'
 
+<<<<<<< HEAD
+=======
+# Train datasets full paths
+TRAIN_CLIENT_DATA_PATH = os.path.join(TRAIN_DATA_DIR, CLIENT_DATA_FILE_NAME)
+TRAIN_ECO_DATA_PATH = os.path.join(TRAIN_DATA_DIR, ECO_DATA_FILE_NAME)
+
+# Predict datasets full paths
+PREDICT_CLIENT_DATA_PATH = os.path.join(PREDICT_DATA_DIR, CLIENT_DATA_FILE_NAME)
+PREDICT_ECO_DATA_PATH = os.path.join(PREDICT_DATA_DIR, ECO_DATA_FILE_NAME)
+
+>>>>>>> :memo: Add README instructions for the train/predict
 # Config file
 CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.yml')
 
 config_data = read_yaml(CONFIG_FILE_PATH)
-DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['subscription']['name'])
+DATA_PATH = os.path.join(TRAIN_DATA_DIR,config_data['subscription']['name'])
 config_client_data = config_data.get('subscription')
 DATA_DATE_FORMAT = config_data['subscription']['date_format']
 DATA_SEP = config_data['subscription']['sep']
-ECO_DATA_PATH = os.path.join(RAW_DATA_DIR,config_data['economic_info']['name'])
+ECO_DATA_PATH = os.path.join(TRAIN_DATA_DIR,config_data['economic_info']['name'])
 config_eco_data = config_data.get('economic_info')
 ECO_DATA_DATE_FORMAT = config_data['economic_info']['date_format']
 ECO_DATA_SEP = config_data['economic_info']['sep']
