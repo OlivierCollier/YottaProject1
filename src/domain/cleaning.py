@@ -90,8 +90,6 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 		self.data = data
 		self._impute_job_type()
 		self._impute_from_job_type()
-		# ipdb.set_trace()
-		#self._remove_remaining_rows_with_missing_values()
 		return self.data
 
 
@@ -133,9 +131,4 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 			corresponding_job_types.replace(replacements[column_name])
 		return self
 
-
-	def _remove_remaining_rows_with_missing_values(self):
-		"""Removes remaining observations with missing values."""
-		self.data.dropna(inplace=True)
-		return self
 
