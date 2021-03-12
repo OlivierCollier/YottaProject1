@@ -63,7 +63,14 @@ def test_independence_between_target_and_job_type(data):
           f" pas indépendant de la cible.")
 
 def remove_missing_values_for_job_type(data):
-    data = data[~data['JOB_TYPE'].isnull()]
+    def impute_by_age(age):
+        if age < 25:
+            return 'Etudiant'
+        elif age > 60:
+            return 'Retraité'
+        else:
+            return data['JOB_TYPE'].mode()[0]
+    data.loc[data.JOB_TYPE.isnull(), 'JOB_TYPE'] = data.loc[data.JOB_TYPE.isnull(), 'AGE'].map(impute_by_age)
 
 def illustrate_status(data):
     sns.countplot(data.STATUS)
@@ -129,7 +136,7 @@ def bonferroni_outlier_test_retired(data):
     y = table['Subscription rate']
     X = table.drop(columns='Subscription rate')
     ols = OLS(y, X).fit()
-    print(f"Bonferroni outlier test p-value: {ols.outlier_test()['bonf(p)']['Retired']}")
+    print(f"Bonferroni outlier test p-value: {ols.outlier_test()['bonf(p)']['Retraité']}")
 
 def show_results_linear_regression_subscription_rate_without_retired(data):
     data_copy = data.copy()
@@ -147,7 +154,7 @@ def show_results_linear_regression_subscription_rate_without_retired(data):
 
 def show_predictions_subscription_rate_without_retired(data):
     data_copy = data.copy()
-    data_copy = data_copy[~data_copy['JOB_TYPE'].eq('Retired')]
+    data_copy = data_copy[~data_copy['JOB_TYPE'].eq('Retraité')]
     data_copy['MARITAL_STATUS'] = data_copy['STATUS']
     table = pd.crosstab(data_copy['JOB_TYPE'], data_copy['MARITAL_STATUS'])
     table['Proportion Single'] = table['Single'] / (table['Single'] + table['Married'] + table['Divorced'])
@@ -186,8 +193,8 @@ def plot_age_histogram(data):
 def plot_date_by_year(data):
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    data['year-month'] = data['DATE_x'].apply(lambda x: x[:7])
-    data['date'] = data['DATE_x'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
+    data['year-month'] = data['DATE'].apply(lambda x: x[:7])
+    data['date'] = data['DATE'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d'))
     data['year'] = data['date'].apply(lambda x: x.year)
     data['MONTH'] = data['date'].apply(lambda x: months[x.month-1])
     data['WEEKDAY'] = data['date'].apply(lambda x: weekdays[x.weekday()])
@@ -272,9 +279,9 @@ def missing_values_percentage_of_result_by_month(data):
         .groupby('year-month')\
         .agg(lambda x: 100 * x.isnull().sum() / len(x))
     plt.plot(table)
-    plt.xlabel('Month')
-    plt.ylabel('Percentage')
-    plt.title('Percentage of missing values by month')
+    plt.xlabel('Mois')
+    plt.ylabel('Pourcentage')
+    plt.title('Pourcentage de valeurs manquantes par mois')
     plt.xticks([0, 7, 13, 19, 25], ('2008-05', '2009-01', '2009-07', '2010-01', '2010-07'))
     plt.show()
 
@@ -291,7 +298,7 @@ def show_table_subscription_by_result_last_campaign(data):
 def plot_nb_days_last_contact(data):
     data['NB_DAYS_LAST_CONTACT'] = data['NB_DAY_LAST_CONTACT']
     sns.histplot(data.loc[data.NB_DAYS_LAST_CONTACT.ne(-1), 'NB_DAYS_LAST_CONTACT'], kde=True)
-    plt.title('Distribution of NB_DAYS_LAST_CONTACT for nonnegative values')
+    plt.title('Distribution de NB_DAYS_LAST_CONTACT pour les valeurs positives')
     plt.show()
 
 def compute_binned_nb_days_last_contact(data):
