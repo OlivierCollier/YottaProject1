@@ -1,7 +1,7 @@
 
 import pandas as pd
+from warnings import simplefilter
 from pandas.core.common import SettingWithCopyWarning
-from sklearn.compose import ColumnTransformer
 
 from src.domain.cleaning import impute_missing_eco_data, correct_wrong_entries
 import src.config.base as base
