@@ -109,6 +109,7 @@ class DateTransformer(BaseEstimator, TransformerMixin):
 
 
 class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
+    """Transforms NB_DAYS_LAST_CONTACT using binning."""
 
     def __init__(self, value_to_replace, n_bins: int):
         self.value_to_replace = value_to_replace
