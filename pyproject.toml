@@ -20,6 +20,7 @@ PyYAML = "^5.4.1"
 imbalanced-learn = "^0.8.0"
 category-encoders = "^2.2.2"
 jupyter-contrib-nbextensions = "^0.5.1"
+jupyterlab = "^3.0.10"
 
 [tool.poetry.dev-dependencies]
 
