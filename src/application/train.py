@@ -4,6 +4,8 @@
 """
 
 import pickle
+from warnings import simplefilter
+from pandas.core.common import SettingWithCopyWarning
 from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
@@ -14,6 +16,9 @@ from src.domain.build_features import feature_engineering_transformer
 from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data, MissingValueTreatment
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 
+# Ignorer les warnings pour améliorer la lisibilité
+simplefilter(action='ignore', category=FutureWarning)
+simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 def main():
 

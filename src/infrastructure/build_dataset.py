@@ -1,9 +1,15 @@
 
 import pandas as pd
+from pandas.core.common import SettingWithCopyWarning
+from sklearn.compose import ColumnTransformer
 
 from src.domain.cleaning import impute_missing_eco_data, correct_wrong_entries
 import src.config.base as base
 import src.config.column_names as col
+
+# Ignorer les warnings pour améliorer la lisibilité
+simplefilter(action='ignore', category=FutureWarning)
+simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 # Global variables
 MERGING_METHODS = ['left', 'right', 'outer', 'inner', 'cross']

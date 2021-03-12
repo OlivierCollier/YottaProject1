@@ -5,12 +5,17 @@
 
 import pickle
 import pandas as pd
+from warnings import simplefilter
+from pandas.core.common import SettingWithCopyWarning
 
 import src.config.base as base
 import src.config.column_names as col
 from src.infrastructure.build_dataset import DataBuilderFactory, DataMerger
 from src.domain.cleaning import correct_wrong_entries, impute_missing_eco_data
 
+# Ignorer les warnings pour améliorer la lisibilité
+simplefilter(action='ignore', category=FutureWarning)
+simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 def load_pipeline():
     """Loads model from pickle file."""

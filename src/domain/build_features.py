@@ -1,6 +1,8 @@
 
 import numpy as np
 import pandas as pd
+from warnings import simplefilter
+from pandas.core.common import SettingWithCopyWarning
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, Binarizer, StandardScaler, FunctionTransformer
 from sklearn.pipeline import Pipeline, FeatureUnion
@@ -8,6 +10,10 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from category_encoders.target_encoder import TargetEncoder
 
 import src.config.column_names as col
+
+# Ignorer les warnings pour améliorer la lisibilité
+simplefilter(action='ignore', category=FutureWarning)
+simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 
 class ClipTransformer(BaseEstimator, TransformerMixin):

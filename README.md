@@ -45,3 +45,20 @@ The model is then saved in the `models/` folder.
     $ poetry run predict
 
 The predictions are stored in the `data/predictions/` folder.
+
+## EDA notebook
+
+> Place the client dataset (`data.csv`) and the socio-economic dataset (`socio_eco.csv`) in the `data/raw/train`, then run the following commands at the root of the project:
+
+    $ source activate.sh
+    $ poetry run python src/infrastructure/build_dataset.py
+    $ cd notebooks/eda-notebook/
+    $ poetry run jupyter-notebook
+
+## Model-optimization notebook
+
+> Make sure to run the train and predict step described above, then run the following commands at the root of the project:
+
+    $ source activate.sh
+    $ cd notebooks/model-optimization-notebook/
+    $ poetry run jupyter-notebook

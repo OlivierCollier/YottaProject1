@@ -1,10 +1,15 @@
 import numpy as np
 import pandas as pd
+from warnings import simplefilter
+from pandas.core.common import SettingWithCopyWarning
 from sklearn.base import BaseEstimator, TransformerMixin
 
 import src.config.column_names as col
 import src.config.base as base
 
+# Ignorer les warnings pour améliorer la lisibilité
+simplefilter(action='ignore', category=FutureWarning)
+simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:
     """Impute missing values in economic data using interpolation.
