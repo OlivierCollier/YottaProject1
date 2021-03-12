@@ -58,6 +58,7 @@ def main():
     pipeline = load_pipeline()
 
     # Makes predictions.
+    X_pred.dropna(axis=0)
     y_pred = pipeline.predict(X_pred)
 
     # Writes predictions.

@@ -58,6 +58,8 @@ def main():
                                                         random_state=base.SEED,
                                                         stratify=merged_data_y)
 
+    pipeline.fit(X_train, y_train)
+
     # Initializes random search.
     print('Initializing random search...')
     clf = RandomizedSearchCV(estimator=pipeline,

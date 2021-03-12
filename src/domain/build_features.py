@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, Binarizer, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, Binarizer, StandardScaler, FunctionTransformer
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.base import TransformerMixin, BaseEstimator
 from category_encoders.target_encoder import TargetEncoder
@@ -107,31 +107,36 @@ class DateTransformer(BaseEstimator, TransformerMixin):
         target_encoded_month = self.encoder.transform(months)
         return target_encoded_month
 
+
 class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
 
     def __init__(self, value_to_replace, n_bins: int):
         self.value_to_replace = value_to_replace
         self.n_bins = n_bins
-        self.X = None
+        self.bins = None
+        self.middles = None
 
     def fit(self, X, y=None):
-        X = X.replace({self.value_to_replace: 800})
-        data_to_bin = X.to_numpy().reshape(1, -1).tolist()[0]
-        groups = pd.qcut(data_to_bin, self.n_bins)
-        self.bins = groups
+        positive_values = X[X.ne(self.value_to_replace)]
+        positive_values = pd.DataFrame(positive_values)
+        positive_values.dropna(axis=0, inplace=True)
+        positive_values = positive_values.to_numpy().reshape(1, -1).tolist()[0]
+        interval_groups = pd.qcut(positive_values, self.n_bins)
+        boundaries = set((interval_groups.map(lambda x: x.right).unique().tolist() + interval_groups.map(lambda x: x.left).unique().tolist()))
+        boundaries = list(boundaries)
+        boundaries.sort()
+        boundaries[-1] += 1000
+        self.bins = boundaries
+        middles = (np.array(boundaries[:-1]) + np.array(boundaries[1:])) / 2
+        self.middles = middles
         return self
 
     def transform(self, X):
-        X_transformed = X.copy()
-        X_transformed = X_transformed.replace({self.value_to_replace: 800})
-        # data_to_bin = X[X.ne(self.value_to_replace).to_numpy()]
-        ipdb.set_trace()
-        binned_X = X_transformed.groupby(self.bins).transform('mean')
-        # X_transformed[X.eq(self.value_to_replace)] = binned_X.max()[0]
-        # tmp = X_transformed[X.ne(self.value_to_replace)].dropna()
-        # X_transformed[X.ne(self.value_to_replace)].dropna() = binned_X
-        ipdb.set_trace()
-        return binned_X
+        transformed = X.copy()
+        transformed = transformed.replace({self.value_to_replace: max(self.bins)})
+        transformed = transformed.to_numpy().reshape(1, -1).tolist()[0]
+        binned = pd.cut(transformed, bins=self.bins, labels=self.middles)
+        return pd.DataFrame(binned)
 
 
 def feature_engineering_transformer():
@@ -153,7 +158,7 @@ def feature_engineering_transformer():
         ('age-transformer', age_transformer(), [col.AGE]),
         ('date-transformer', DateTransformer(), [col.LAST_CONTACT_DATE]),
         ('disjunction-transformer', LogicalOrTransformer(), [col.HAS_PERSO_LOAN, col.HAS_HOUSING_LOAN]),
-        #('nb-days-last-contact-transformer', NbDaysLastContactTransformer(-1, 4), [col.NB_DAYS_LAST_CONTACT])
+        ('nb-days-last-contact-transformer', NbDaysLastContactTransformer(value_to_replace=-1, n_bins=4), [col.NB_DAYS_LAST_CONTACT]),
         ('scaler', StandardScaler(), eco_features)
     ])
 
