@@ -26,7 +26,7 @@ To install the project on your computer:
 
 To install the required dependencies and activate the virtual environment:
 
-    $ ./activate.sh
+    $ source activate.sh
 
 # How to use
 
