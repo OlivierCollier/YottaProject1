@@ -65,16 +65,16 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
         self.categorical_variables = None
         self.continuous_variables = None
 
-    def fit(self, data: pd.DataFrame, y):
-        self.data = data
-        cat_variables = data.select_dtypes(include='object').columns.tolist()
+    def fit(self, X: pd.DataFrame, y):
+        cat_variables = X.select_dtypes(include='object').columns.tolist()
         cat_variables.remove(col.JOB_TYPE)
         self.categorical_variables = cat_variables
-        self.continuous_variables = data.select_dtypes(include='number').columns.tolist()
+        self.continuous_variables = X.select_dtypes(include='number').columns.tolist()
         return self
 
-    def transform(self, y=None) -> pd.DataFrame:
+    def transform(self, X, y=None) -> pd.DataFrame:
         """Imputes JOB_TYPE when missing, then imputes other missing values from JOB_TYPE."""
+        self.data = X
         self._impute_job_type()
         self._impute_from_job_type()
         return self.data

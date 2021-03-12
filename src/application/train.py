@@ -75,6 +75,5 @@ def main():
     with open(base.SAVED_MODEL_PATH, 'wb') as file:
         pickle.dump(clf, file)
 
-
 if __name__ == '__main__':
     main()

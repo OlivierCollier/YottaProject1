@@ -95,17 +95,17 @@ class DateTransformer(BaseEstimator, TransformerMixin):
 
     def __init__(self):
         self.encoder = None
+        self.month = None
 
     def fit(self, X, y=None):
-        self.encoder = TargetEncoder().fit(X, y)
+        self.month = X.apply(lambda x: x.apply(lambda y: str(y.month)))
+        self.encoder = TargetEncoder().fit(self.month, y)
         return self
 
-    ############
     def transform(self, X, y=None):
-        month = X.apply(lambda x: x.apply(lambda y: str(y.month)))
-        target_encoded_month = self.encoder.transform(month)
+        months = X.apply(lambda x: x.apply(lambda y: str(y.month)))
+        target_encoded_month = self.encoder.transform(months)
         return target_encoded_month
-    ############
 
 class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
 
@@ -137,8 +137,7 @@ class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
 def feature_engineering_transformer():
     """Creates pipeline for feature engineering."""
 
-    one_hot_encoded_features = [col.MARITAL_STATUS,
-                                col.EDUCATION,
+    one_hot_encoded_features = [col.EDUCATION,
                                 col.HAS_HOUSING_LOAN,
                                 col.HAS_PERSO_LOAN,
                                 col.HAS_DEFAULT]
@@ -154,7 +153,7 @@ def feature_engineering_transformer():
         ('age-transformer', age_transformer(), [col.AGE]),
         ('date-transformer', DateTransformer(), [col.LAST_CONTACT_DATE]),
         ('disjunction-transformer', LogicalOrTransformer(), [col.HAS_PERSO_LOAN, col.HAS_HOUSING_LOAN]),
-        # ('nb-days-last-contact-transformer', NbDaysLastContactTransformer(-1, 4), [col.NB_DAYS_LAST_CONTACT])
+        #('nb-days-last-contact-transformer', NbDaysLastContactTransformer(-1, 4), [col.NB_DAYS_LAST_CONTACT])
         ('scaler', StandardScaler(), eco_features)
     ])
 
