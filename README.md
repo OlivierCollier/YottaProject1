@@ -53,12 +53,18 @@ The predictions are stored in the `data/predictions/` folder.
     $ source activate.sh
     $ poetry run python src/infrastructure/build_dataset.py
     $ cd notebooks/eda-notebook/
-    $ poetry run jupyter-notebook
+    $ poetry run jupyter-notebook eda-notebook.ipynb
 
-## Model-optimization notebook
+## Model optimization notebook
 
 > Make sure to run the train and predict step described above, then run the following commands at the root of the project:
 
     $ source activate.sh
     $ cd notebooks/model-optimization-notebook/
-    $ poetry run jupyter-notebook
+    $ poetry run jupyter-notebook model-optimization-notebook.ipynb
+
+## Model interpretability notebook
+
+    $ source activate.sh
+    $ cd notebooks/model-interpretability-notebook/
+    $ poetry run jupyter-notebook model-interpretability-notebook.ipynb
