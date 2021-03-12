@@ -21,24 +21,21 @@ The goal of this academic project is to make a machine learning model that predi
 
 To install the project on your computer:
 
-    $ git clone <project>
-    $ cd <project>
+    $ git clone https://gitlab.com/yotta-academy/mle-bootcamp/projects/ml-project/winter-2021/productsubscription-oc-jk.git
+    $ cd productsubscription-oc-jk
 
-To install the required dependencies:
+To install the required dependencies and activate the virtual environment:
 
-    $ poetry install
-
-Activate the virtual environment:
-
-    $ poetry shell
+    $ ./activate.sh
 
 # How to use
 
 ## Train
 
-> Place the client dataset (`data.csv`) and the socio-economic dataset (`socio_eco.csv`) in the `data/raw/train` directory prior to the train.
+> Place the client dataset (`data.csv`) and the socio-economic dataset (`socio_eco.csv`) in the `data/raw/train` directory prior to the training.
 
     $ poetry run train
+
 The model is then saved in the `models/` folder.
 
 ## Predict
