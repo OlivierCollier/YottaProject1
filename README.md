@@ -68,3 +68,5 @@ The predictions are stored in the `data/predictions/` folder.
     $ source activate.sh
     $ cd notebooks/model-interpretability-notebook/
     $ poetry run jupyter-notebook model-interpretability-notebook.ipynb
+
+(test)
