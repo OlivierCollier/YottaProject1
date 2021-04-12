@@ -5,7 +5,9 @@ stages:
 
 before_script:
   - export PIP_CACHE="pip-cache"
-  - pip install pandas
+  - pip install poetry
+  - poetry install
+  - poetry shell
   - pip install pytest
 
 cache:
