@@ -5,7 +5,6 @@ stages:
 
 before_script:
   - export PIP_CACHE="pip-cache"
-  - pip install python3.8
   - pip install poetry
   - poetry install
   - poetry shell
