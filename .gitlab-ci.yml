@@ -2,12 +2,11 @@ image: python:3.7
 
 stages:
   - test
-  - deploy
 
 before_script:
   - export PIP_CACHE="pip-cache"
+  - pip install pandas
   - pip install pytest
-  - pip install -r requirements.txt
 
 cache:
   paths:
@@ -15,48 +14,6 @@ cache:
 
 test_post_train:
   stage: test
-  script: pytest -s src/test_post_train.py --model-path models/titanic.pkl --data-path data/train.csv
+  script: pytest src/test_build_features.py
   only:
     - merge_requests
-
-test_perturbation:
-  stage: test
-  script: pytest --junitxml=report.xml -s src/test_perturbation.py --model-path models/titanic.pkl --data-path data/train.csv
-  artifacts:
-    when: always
-    reports:
-      junit: report.xml
-  only:
-    - merge_requests
-
-metrics:
-  stage: test
-  only:
-    refs:
-      - preprod
-      - merge_requests
-    changes:
-      - models/*.pkl
-  script: |+
-    ls metrics.txt && rm metrics.txt  # override current metrics.txt for proper diffing
-    for filename in $(ls models/*.pkl); do
-      python src/score_producer.py "$filename" data/test.csv accuracy_score >> metrics.txt
-    done
-    cat metrics.txt
-  artifacts:
-    reports:
-      metrics: metrics.txt
-
-build_docker_image:
-  stage: deploy
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - docker info
-  only:
-    - prod
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t registry.gitlab.com/remiadon/tp-mlops .
-    - docker push registry.gitlab.com/remiadon/tp-mlops
