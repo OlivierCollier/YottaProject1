@@ -1,10 +1,11 @@
-image: python:3.7
+image: python:3.8
 
 stages:
   - test
 
 before_script:
   - export PIP_CACHE="pip-cache"
+  - pip install python3.8
   - pip install poetry
   - poetry install
   - poetry shell
