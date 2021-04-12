@@ -3,6 +3,7 @@ import seaborn as sns
 import numpy as np
 import plotly.graph_objs as go
 import pandas as pd
+from sklearn.metrics import roc_curve, precision_recall_curve
 
 
 
@@ -29,6 +30,7 @@ def plot_features_importance(data, importances, n_feat):
     sns.barplot(x=importances[indices][:n_feat],
                 y=features[indices][:n_feat], palette='Blues_r')
     plt.title("Top {} Features Importance".format(n_feat))
+    plt.savefig('/Users/jeremie/Documents/Formation/yotta-academy/Cours/Projets/Soutenance projet 1/feature_importances.png',bbox_inches="tight")
     return plt.show()
 
 
@@ -242,3 +244,98 @@ def hoverinfo_horizontal_(hover_value):
     if hover_value == "text":
         horizontal_hover_value = "text"
     return horizontal_hover_value
+
+
+def compute_y_pred_from_query(X, rule):
+    score = np.zeros(X.shape[0])
+    X = X.reset_index(drop=True)
+    score[list(X.query(rule).index)] = 1
+    return(score)
+
+
+def compute_performances_from_y_pred(y_true, y_pred, index_name='default_index'):
+    df = pd.DataFrame(data=
+        {
+            'precision':[sum(y_true * y_pred)/sum(y_pred)],
+            'recall':[sum(y_true * y_pred)/sum(y_true)]
+        },
+        index=[index_name],
+        columns=['precision', 'recall']
+    )
+    return(df)
+
+
+def compute_train_test_query_performances(X_train, y_train, X_test, y_test, rule):
+    
+    y_train_pred = compute_y_pred_from_query(X_train, rule)
+    y_test_pred = compute_y_pred_from_query(X_test, rule)
+    
+    performances = None
+    performances = pd.concat([
+        performances,
+        compute_performances_from_y_pred(y_train, y_train_pred, 'train_set')],
+        axis=0)
+    performances = pd.concat([
+        performances,
+        compute_performances_from_y_pred(y_test, y_test_pred, 'test_set')],
+        axis=0)
+            
+    return(performances)
+
+def _plot_roc(ax, y_true, score_with_line, score_with_points, label_lines, label_points):
+    _plot_roc_lines(ax, y_true, score_with_line, label_lines)
+    _plot_roc_points(ax, y_true, score_with_points, label_points)
+
+    ax.set_title("ROC", fontsize=20)
+    ax.set_xlabel('False Positive Rate', fontsize=18)
+    ax.set_ylabel('True Positive Rate (Recall)', fontsize=18)
+    ax.legend(loc='lower center', fontsize=8)
+    return ax
+
+def _plot_pr_curve(ax, y_true, score_with_line, score_with_points, label_lines, label_points):
+    _plot_pr_curve_lines(ax, y_true, score_with_line, label_lines)
+    _plot_pr_curve_points(ax, y_true, score_with_points, label_points)
+
+    ax.set_title("Precision-Recall", fontsize=20)
+    ax.set_xlabel('Recall (True Positive Rate)', fontsize=18)
+    ax.set_ylabel('Precision', fontsize=18)
+    ax.legend(loc='lower center', fontsize=8)
+    return ax
+
+def _plot_roc_lines(ax, y_true, score_with_line, label_lines):
+    fpr, tpr, _ = roc_curve(y_true, score_with_line)
+    ax.plot(fpr, tpr, linestyle='-.', color="blue", lw=1, label=label_lines)
+    return ax
+
+def _plot_roc_points(ax, y_true, score_with_points, label_points):
+    fpr, tpr, _ = roc_curve(y_true, score_with_points)
+    ax.scatter(fpr[:-1], tpr[:-1], linestyle='-.', color="red", s=10, label=label_points)
+    return ax
+
+def _plot_pr_curve_lines(ax, y_true, score_with_line, label_lines):
+    precision, recall, _ = precision_recall_curve(y_true, score_with_line)
+    ax.step(recall, precision, linestyle='-.', c="blue", lw=1, where='post', label=label_lines)
+    return ax
+
+def _plot_pr_curve_points(ax, y_true, score_with_points, label_points):
+    precision, recall, _ = precision_recall_curve(y_true, score_with_points)
+    ax.scatter(recall, precision, c="red", s=10, label=label_points)
+    return ax
+
+
+def plot_scores(y_true, scores_with_line=[], scores_with_points=[],
+                labels_with_line=['Random Forest'], labels_with_points=['skope-rules']):
+
+    n_models = len(labels_with_line)
+    fig, axes = plt.subplots(n_models, 2, figsize=(12, 5), sharex=True, sharey=True)
+
+    for i in range(n_models):
+        ax = axes[i][0] if n_models > 1 else axes[0]
+        _plot_roc(ax, y_true, scores_with_line[i], scores_with_points[i],
+                  labels_with_line[i], labels_with_points[i])
+
+        ax = axes[i][1] if n_models > 1 else axes[1]
+        _plot_pr_curve(ax, y_true, scores_with_line[i], scores_with_points[i],
+                       labels_with_line[i], labels_with_points[i])
+    plt.savefig('/Users/jeremie/Documents/Formation/yotta-academy/Cours/Projets/Soutenance projet 1/curves.png',bbox_inches="tight")
+    plt.show()
