@@ -8,7 +8,7 @@ subscription:
     'AGE': int64
     'BALANCE': 'float64'
   wrong_entries:
-    'AGE': 123 
+    'AGE': 123
   filters:
     'missing': ['AGE','JOB_TYPE']
 
@@ -22,5 +22,3 @@ economic_info:
     'DATE': datetime64
   filters:
     'missing': []
-
-

@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-import src.config.column_names as col
 import src.config.base as base
+import src.config.column_names as col
 
 
 def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:
@@ -17,7 +17,7 @@ def impute_missing_eco_data(eco_data: pd.DataFrame) -> pd.DataFrame:
 	-------
 	complete_data: pd.Dataframe
 	"""
-    complete_data = eco_data.interpolate(limit_direction='both')
+    complete_data = eco_data.interpolate(limit_direction="both")
     return complete_data
 
 
@@ -66,10 +66,10 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
         self.continuous_variables = None
 
     def fit(self, X: pd.DataFrame, y):
-        cat_variables = X.select_dtypes(include='object').columns.tolist()
+        cat_variables = X.select_dtypes(include="object").columns.tolist()
         cat_variables.remove(col.JOB_TYPE)
         self.categorical_variables = cat_variables
-        self.continuous_variables = X.select_dtypes(include='number').columns.tolist()
+        self.continuous_variables = X.select_dtypes(include="number").columns.tolist()
         return self
 
     def transform(self, X, y=None) -> pd.DataFrame:
@@ -81,36 +81,42 @@ class MissingValueTreatment(BaseEstimator, TransformerMixin):
 
     def _imputation_from_age(self, age):
         if age < 25:
-            return base.JOB_TYPE_TRANSLATION.get('Etudiant')
+            return base.JOB_TYPE_TRANSLATION.get("Etudiant")
         elif age > 60:
-            return base.JOB_TYPE_TRANSLATION.get('Retraité')
+            return base.JOB_TYPE_TRANSLATION.get("Retraité")
         else:
-            return self.data['JOB_TYPE'].mode()[0]
+            return self.data["JOB_TYPE"].mode()[0]
 
     def _impute_job_type(self):
         """Imputes missing values of JOB_TYPE from AGE."""
-        self.data.loc[pd.isna(self.data[col.JOB_TYPE]), col.JOB_TYPE] = \
-            self.data.loc[pd.isna(self.data[col.JOB_TYPE]), col.AGE].map(lambda x: self._imputation_from_age(x))
+        self.data.loc[pd.isna(self.data[col.JOB_TYPE]), col.JOB_TYPE] = self.data.loc[
+            pd.isna(self.data[col.JOB_TYPE]), col.AGE
+        ].map(lambda x: self._imputation_from_age(x))
         return self
 
     def _impute_from_job_type(self):
         """Imputes missing values using JOB_TYPE."""
         for column_name in self.categorical_variables:
-            method = (lambda x: x.mode()[0])
+            method = lambda x: x.mode()[0]
             self._impute_single_column_from_job_type(column_name, method)
         for column_name in self.continuous_variables:
-            method = (lambda x: x.median())
+            method = lambda x: x.median()
             self._impute_single_column_from_job_type(column_name, method)
         return self
 
     def _impute_single_column_from_job_type(self, column_name: str, method):
         """Imputes missing values for a single variable using JOB_TYPE."""
-        relevant_observations = (~self.data[col.JOB_TYPE].isnull()) & (self.data[column_name].isnull())
+        relevant_observations = (~self.data[col.JOB_TYPE].isnull()) & (
+            self.data[column_name].isnull()
+        )
         corresponding_job_types = self.data.loc[relevant_observations, col.JOB_TYPE]
-        replacements = self.data[[col.JOB_TYPE, column_name]] \
-            .groupby(col.JOB_TYPE) \
-            .agg(method) \
+        replacements = (
+            self.data[[col.JOB_TYPE, column_name]]
+            .groupby(col.JOB_TYPE)
+            .agg(method)
             .to_dict()
-        self.data.loc[relevant_observations, column_name] = \
-            corresponding_job_types.replace(replacements[column_name])
+        )
+        self.data.loc[
+            relevant_observations, column_name
+        ] = corresponding_job_types.replace(replacements[column_name])
         return self

@@ -1,11 +1,10 @@
-
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, Binarizer, StandardScaler, FunctionTransformer
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.base import TransformerMixin, BaseEstimator
 from category_encoders.target_encoder import TargetEncoder
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import FeatureUnion
+from sklearn.preprocessing import Binarizer, OneHotEncoder, StandardScaler
 
 import src.config.column_names as col
 
@@ -65,11 +64,13 @@ def age_transformer():
             - scaling with sklearn StandardScaler.
     """
 
-    transformer = FeatureUnion([
-        ('is-not-young-indicator', Binarizer(25)),
-        ('is-old-indicator', Binarizer(60)),
-        ('scaled', StandardScaler())
-    ])
+    transformer = FeatureUnion(
+        [
+            ("is-not-young-indicator", Binarizer(25)),
+            ("is-old-indicator", Binarizer(60)),
+            ("scaled", StandardScaler()),
+        ]
+    )
     return transformer
 
 
@@ -83,7 +84,7 @@ class LogicalOrTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        boolean = X.eq('Yes').astype(int)
+        boolean = X.eq("Yes").astype(int)
         sum = boolean.sum(axis=1)
         prod = boolean.prod(axis=1)
         disjunction = pd.DataFrame(sum - prod)
@@ -109,7 +110,6 @@ class DateTransformer(BaseEstimator, TransformerMixin):
 
 
 class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
-
     def __init__(self, value_to_replace, n_bins: int):
         self.value_to_replace = value_to_replace
         self.n_bins = n_bins
@@ -122,7 +122,12 @@ class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
         positive_values.dropna(axis=0, inplace=True)
         positive_values = positive_values.to_numpy().reshape(1, -1).tolist()[0]
         interval_groups = pd.qcut(positive_values, self.n_bins)
-        boundaries = set((interval_groups.map(lambda x: x.right).unique().tolist() + interval_groups.map(lambda x: x.left).unique().tolist()))
+        boundaries = set(
+            (
+                interval_groups.map(lambda x: x.right).unique().tolist()
+                + interval_groups.map(lambda x: x.left).unique().tolist()
+            )
+        )
         boundaries = list(boundaries)
         boundaries.sort()
         boundaries[-1] += 1000
@@ -142,24 +147,60 @@ class NbDaysLastContactTransformer(BaseEstimator, TransformerMixin):
 def feature_engineering_transformer():
     """Creates pipeline for feature engineering."""
 
-    one_hot_encoded_features = [col.EDUCATION,
-                                col.HAS_HOUSING_LOAN,
-                                col.HAS_PERSO_LOAN,
-                                col.HAS_DEFAULT]
-    eco_features = [col.EMPLOYMENT_VARIATION_RATE, col.IDX_CONSUMER_PRICE, col.IDX_CONSUMER_CONFIDENCE]
+    one_hot_encoded_features = [
+        col.EDUCATION,
+        col.HAS_HOUSING_LOAN,
+        col.HAS_PERSO_LOAN,
+        col.HAS_DEFAULT,
+    ]
+    eco_features = [
+        col.EMPLOYMENT_VARIATION_RATE,
+        col.IDX_CONSUMER_PRICE,
+        col.IDX_CONSUMER_CONFIDENCE,
+    ]
 
-    feature_eng_transformer = ColumnTransformer([
-        ('balance-clipper', ClipTransformer(a_min=-4000, a_max=4000), [col.ACCOUNT_BALANCE]),
-        ('nb-clipper', ClipTransformer(a_min=0, a_max=15), [col.NB_CONTACTS_CURRENT_CAMPAIGN, col.NB_CONTACTS_BEFORE_CAMPAIGN]),
-        ('one-hot-encoder', OneHotEncoder(drop='first'), one_hot_encoded_features),
-        ('category-retired-extractor', ExtractCategoryTransformer('Retired'), [col.JOB_TYPE]),
-        ('category-success-extractor', ExtractCategoryTransformer('Success'), [col.RESULT_LAST_CAMPAIGN]),
-        ('category-single-extractor', ExtractCategoryTransformer('Single'), [col.MARITAL_STATUS]),
-        ('age-transformer', age_transformer(), [col.AGE]),
-        ('date-transformer', DateTransformer(), [col.LAST_CONTACT_DATE]),
-        ('disjunction-transformer', LogicalOrTransformer(), [col.HAS_PERSO_LOAN, col.HAS_HOUSING_LOAN]),
-        ('nb-days-last-contact-transformer', NbDaysLastContactTransformer(value_to_replace=-1, n_bins=4), [col.NB_DAYS_LAST_CONTACT]),
-        ('scaler', StandardScaler(), eco_features)
-    ])
+    feature_eng_transformer = ColumnTransformer(
+        [
+            (
+                "balance-clipper",
+                ClipTransformer(a_min=-4000, a_max=4000),
+                [col.ACCOUNT_BALANCE],
+            ),
+            (
+                "nb-clipper",
+                ClipTransformer(a_min=0, a_max=15),
+                [col.NB_CONTACTS_CURRENT_CAMPAIGN, col.NB_CONTACTS_BEFORE_CAMPAIGN],
+            ),
+            ("one-hot-encoder", OneHotEncoder(drop="first"), one_hot_encoded_features),
+            (
+                "category-retired-extractor",
+                ExtractCategoryTransformer("Retired"),
+                [col.JOB_TYPE],
+            ),
+            (
+                "category-success-extractor",
+                ExtractCategoryTransformer("Success"),
+                [col.RESULT_LAST_CAMPAIGN],
+            ),
+            (
+                "category-single-extractor",
+                ExtractCategoryTransformer("Single"),
+                [col.MARITAL_STATUS],
+            ),
+            ("age-transformer", age_transformer(), [col.AGE]),
+            ("date-transformer", DateTransformer(), [col.LAST_CONTACT_DATE]),
+            (
+                "disjunction-transformer",
+                LogicalOrTransformer(),
+                [col.HAS_PERSO_LOAN, col.HAS_HOUSING_LOAN],
+            ),
+            (
+                "nb-days-last-contact-transformer",
+                NbDaysLastContactTransformer(value_to_replace=-1, n_bins=4),
+                [col.NB_DAYS_LAST_CONTACT],
+            ),
+            ("scaler", StandardScaler(), eco_features),
+        ]
+    )
 
     return feature_eng_transformer
