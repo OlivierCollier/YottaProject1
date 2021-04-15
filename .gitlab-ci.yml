@@ -4,9 +4,9 @@ stages:
   - test
 
 before_script:
-  - pip install poetry
+  - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+  - export PATH=$PATH:$HOME/.poetry/bin
   - poetry install
-  - pip install pytest
 
 cache:
   paths:
