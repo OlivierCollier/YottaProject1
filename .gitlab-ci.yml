@@ -7,6 +7,7 @@ before_script:
   - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
   - export PATH=$PATH:$HOME/.poetry/bin
   - poetry install
+  - poetry add pytest
 
 cache:
   paths:
