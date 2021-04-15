@@ -4,7 +4,6 @@ stages:
   - test
 
 before_script:
-  - export PIP_CACHE="pip-cache"
   - pip install poetry
   - poetry install
   - pip install pytest
@@ -15,6 +14,6 @@ cache:
 
 test_post_train:
   stage: test
-  script: pytest src/domain/tests/test_build_features.py
+  script: poetry run pytest
   only:
     - merge_requests
